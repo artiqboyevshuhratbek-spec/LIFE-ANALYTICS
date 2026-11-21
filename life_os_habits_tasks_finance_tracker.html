@@ -1,0 +1,2330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Life OS — Habits, Tasks & Finance Analytics</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Cormorant Garamond (Editorial Serif for Headers) & Inter (Clean UI/Tables) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            serif: ['"Cormorant Garamond"', 'Georgia', 'serif'],
+            sans: ['"Inter"', 'system-ui', 'sans-serif'],
+          },
+          colors: {
+            linen: '#F3F2ED',
+            paper: '#FAF9F6',
+            sage: {
+              50: '#F1F5F1',
+              100: '#E2EAE2',
+              200: '#C5D5C6',
+              400: '#8FAA92',
+              500: '#78967B',
+              600: '#607D63',
+              700: '#49634C',
+            },
+            clay: {
+              50: '#F8F2EE',
+              100: '#EFE3DC',
+              200: '#DEC6B8',
+              400: '#C59F8A',
+              500: '#B58B74',
+              600: '#9A6B54',
+              700: '#7F523D',
+            },
+            ink: {
+              400: '#8A867E',
+              600: '#57534E',
+              800: '#2E2C29',
+            }
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    /* Subtle editorial scrollbar styling */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #ECEAE3;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #C5B9AE;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #A9988A;
+    }
+
+    /* Custom aesthetic habit checkbox matching screenshot clay squares */
+    .habit-box {
+      appearance: none;
+      -webkit-appearance: none;
+      width: 20px;
+      height: 20px;
+      border: 1.5px solid #C5BEB4;
+      border-radius: 4px;
+      background-color: #FAF9F6;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.14s ease;
+    }
+    .habit-box:hover {
+      border-color: #B58B74;
+      background-color: #F8F2EE;
+    }
+    .habit-box:checked {
+      background-color: #B58B74;
+      border-color: #B58B74;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23FFFFFF' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='4.5 10.5 8.5 14.5 15.5 6.5'/%3E%3C/svg%3E");
+      background-size: 14px 14px;
+      background-repeat: no-repeat;
+      background-position: center;
+    }
+
+    /* Smooth SVG chart transitions */
+    .chart-arc {
+      transition: stroke-dashoffset 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .bar-fill {
+      transition: height 0.35s ease, width 0.35s ease, background-color 0.25s ease;
+    }
+
+    /* Sticky column shadow on horizontal scroll */
+    .sticky-col-shadow {
+      box-shadow: 4px 0 8px -4px rgba(46, 44, 41, 0.08);
+    }
+
+    /* Clean spreadsheet-inspired subtle borders */
+    .sheet-card {
+      background: #FAF9F6;
+      border: 1px solid #D8D4CA;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(46, 44, 41, 0.03);
+    }
+  </style>
+</head>
+
+<body class="bg-linen text-ink-800 font-sans antialiased min-h-screen flex flex-col">
+
+  <!-- ===================================================================== -->
+  <!-- TOP NAVIGATION BAR (Editorial Tabs + Language, Currency & Data Tools) -->
+  <!-- ===================================================================== -->
+  <header class="sticky top-0 z-40 bg-paper/95 backdrop-blur border-b border-[#D8D4CA]">
+    <div class="max-w-[1600px] mx-auto px-3 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-3">
+      <!-- Brand / Sheet Title -->
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-lg bg-sage-500 text-white flex items-center justify-center font-serif text-xl font-bold shadow-sm">
+          L
+        </div>
+        <div>
+          <h1 class="font-serif text-xl sm:text-2xl font-bold tracking-wide text-clay-700 leading-none" data-i18n="appTitle">
+            LIFE ANALYTICS
+          </h1>
+          <p class="text-[11px] uppercase tracking-[0.18em] text-ink-400 mt-0.5" data-i18n="appSubtitle">
+            Habits · Tasks · Finance
+          </p>
+        </div>
+      </div>
+
+      <!-- Primary Sheet Tabs (Mirroring Google Sheets Bottom Tabs in Screenshots) -->
+      <nav class="flex items-center bg-linen p-1 rounded-xl border border-[#DDD9D0] overflow-x-auto max-w-full" role="tablist">
+        <button onclick="switchModule('habits')" id="tab-habits"
+          class="module-tab px-3.5 sm:px-5 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all whitespace-nowrap flex items-center gap-2">
+          <span>🌿</span> <span data-i18n="navHabits">Habit Analytics</span>
+        </button>
+        <button onclick="switchModule('tasks')" id="tab-tasks"
+          class="module-tab px-3.5 sm:px-5 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all whitespace-nowrap flex items-center gap-2">
+          <span>✓</span> <span data-i18n="navTasks">Task Tracker</span>
+        </button>
+        <button onclick="switchModule('finance')" id="tab-finance"
+          class="module-tab px-3.5 sm:px-5 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all whitespace-nowrap flex items-center gap-2">
+          <span>◈</span> <span data-i18n="navFinance">Finance & Goals</span>
+        </button>
+      </nav>
+
+      <!-- Utility Controls: Language Toggle, Currency Selector, Export/Reset -->
+      <div class="flex items-center gap-2">
+        <!-- Language Switcher (RU / EN) -->
+        <div class="flex items-center bg-linen border border-[#DDD9D0] rounded-lg p-0.5 text-xs font-semibold">
+          <button onclick="setLanguage('ru')" id="lang-ru" class="px-2.5 py-1.5 rounded-md transition-colors">RU</button>
+          <button onclick="setLanguage('en')" id="lang-en" class="px-2.5 py-1.5 rounded-md transition-colors">EN</button>
+        </div>
+
+        <!-- Currency Selector -->
+        <select id="currency-select" onchange="setCurrency(this.value)"
+          class="bg-linen border border-[#DDD9D0] rounded-lg px-2.5 py-1.5 text-xs font-semibold text-ink-800 focus:outline-none focus:border-sage-500 cursor-pointer">
+          <option value="₽">₽ RUB</option>
+          <option value="$">$ USD</option>
+          <option value="€">€ EUR</option>
+          <option value="UZS">UZS</option>
+        </select>
+
+        <!-- Data Menu Button -->
+        <button onclick="openDataModal()"
+          class="px-3 py-1.5 rounded-lg bg-linen hover:bg-clay-100 border border-[#DDD9D0] text-xs font-medium text-ink-600 transition-colors flex items-center gap-1.5"
+          title="Backup / Reset">
+          <span>⚙</span> <span class="hidden sm:inline" data-i18n="dataBtn">Data</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ===================================================================== -->
+  <!-- MAIN WORKSPACE CONTAINER                                              -->
+  <!-- ===================================================================== -->
+  <main class="flex-1 max-w-[1600px] w-full mx-auto px-3 sm:px-6 py-5 sm:py-7">
+
+    <!-- =================================================================== -->
+    <!-- MODULE 1: HABIT ANALYTICS (Screenshots 1, 2, 4)                     -->
+    <!-- =================================================================== -->
+    <section id="module-habits" class="space-y-6">
+      <!-- Top Row: Month Header & Selector + Daily Bar Chart + Overall Donut -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
+
+        <!-- Left: Month Big Serif Display & Month/Year Controls -->
+        <div class="lg:col-span-3 sheet-card p-5 flex flex-col justify-between">
+          <div class="text-center mb-4">
+            <h2 id="habit-month-title" class="font-serif text-4xl sm:text-5xl font-bold tracking-[0.16em] text-clay-600 uppercase">
+              JULY
+            </h2>
+            <p class="text-[11px] uppercase tracking-[0.22em] text-ink-600 mt-1 font-medium" data-i18n="habitSubtitle">
+              HABIT ANALYTICS
+            </p>
+          </div>
+
+          <div class="border border-[#C8C3B8] rounded-lg overflow-hidden text-xs">
+            <div class="grid grid-cols-2 border-b border-[#C8C3B8]">
+              <div class="bg-clay-400 text-white font-semibold uppercase tracking-wider px-3 py-2 flex items-center justify-center" data-i18n="monthLabel">
+                MONTH
+              </div>
+              <div class="bg-paper px-2 py-1 flex items-center">
+                <select id="habit-month-select" onchange="changeHabitPeriod()"
+                  class="w-full bg-transparent text-ink-800 font-medium text-center focus:outline-none cursor-pointer py-1">
+                </select>
+              </div>
+            </div>
+            <div class="grid grid-cols-2">
+              <div class="bg-clay-400 text-white font-semibold uppercase tracking-wider px-3 py-2 flex items-center justify-center" data-i18n="yearLabel">
+                YEAR
+              </div>
+              <div class="bg-paper px-2 py-1 flex items-center">
+                <select id="habit-year-select" onchange="changeHabitPeriod()"
+                  class="w-full bg-transparent text-ink-800 font-medium text-center focus:outline-none cursor-pointer py-1">
+                  <option value="2025">2025</option>
+                  <option value="2026" selected>2026</option>
+                  <option value="2027">2027</option>
+                  <option value="2028">2028</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Middle: Daily Completion Bar Chart (Screenshot 2 Top) -->
+        <div class="lg:col-span-6 sheet-card p-4 sm:p-5 flex flex-col justify-between">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-semibold uppercase tracking-[0.15em] text-ink-600" data-i18n="dailyTrendTitle">
+              DAILY COMPLETION RATE
+            </span>
+            <div class="flex items-center gap-3 text-[11px] text-ink-400">
+              <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm bg-sage-500 inline-block"></span> 100%</span>
+              <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm bg-clay-400 inline-block"></span> &lt;100%</span>
+            </div>
+          </div>
+          <div id="habit-daily-bars" class="w-full overflow-x-auto pb-1">
+            <!-- Dynamically rendered 28-31 vertical bars -->
+          </div>
+        </div>
+
+        <!-- Right: Overall Monthly Progress Donut (Screenshot 4 Top) -->
+        <div class="lg:col-span-3 sheet-card p-5 flex items-center justify-around gap-3 bg-sage-50/60">
+          <div class="text-left">
+            <p class="text-[11px] uppercase tracking-[0.2em] text-ink-600 font-semibold" data-i18n="progressLabel">
+              PROGRESS
+            </p>
+            <p id="habit-total-pct" class="text-3xl sm:text-4xl font-bold text-clay-700 mt-1">
+              48.4%
+            </p>
+            <p class="text-xs text-ink-400 mt-1" id="habit-total-sub">
+              180 / 372
+            </p>
+          </div>
+          <div class="relative w-28 h-28 flex-shrink-0 flex items-center justify-center">
+            <svg viewBox="0 0 120 120" class="w-full h-full -rotate-90">
+              <circle cx="60" cy="60" r="46" fill="none" stroke="#E4E2DC" stroke-width="14" />
+              <circle id="habit-main-donut" cx="60" cy="60" r="46" fill="none" stroke="#78967B" stroke-width="14"
+                stroke-linecap="butt" stroke-dasharray="289.03" stroke-dashoffset="150" class="chart-arc" />
+            </svg>
+            <div class="absolute inset-0 flex flex-col items-center justify-center text-center">
+              <span class="text-[9px] uppercase tracking-wider text-ink-400 font-semibold" data-i18n="habitsShort">HABITS</span>
+              <span id="habit-donut-fraction" class="text-xs font-bold text-ink-800">180/372</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Spreadsheet Grid: Daily Habits Checkbox Matrix + Per-Habit Progress Bars -->
+      <div class="grid grid-cols-1 xl:grid-cols-12 gap-5 items-start">
+
+        <!-- Left/Center (8 cols): Interactive 31-Day Habit Grid -->
+        <div class="xl:col-span-8 sheet-card overflow-hidden">
+          <div class="bg-sage-500 text-white px-4 py-3 flex flex-wrap items-center justify-between gap-2">
+            <div class="flex items-center gap-2">
+              <h3 class="text-sm font-semibold uppercase tracking-[0.14em]" data-i18n="dailyHabitsTitle">
+                DAILY HABITS
+              </h3>
+              <span id="habit-count-badge" class="text-[11px] bg-white/20 px-2 py-0.5 rounded-full">12</span>
+            </div>
+            <button onclick="addHabit()"
+              class="px-3 py-1 rounded-lg bg-white/15 hover:bg-white/25 text-xs font-medium transition-colors flex items-center gap-1">
+              <span>+</span> <span data-i18n="addHabitBtn">Add Habit</span>
+            </button>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full border-collapse text-xs" id="habit-matrix-table">
+              <!-- Rendered dynamically by JS -->
+            </table>
+          </div>
+        </div>
+
+        <!-- Right (4 cols): Progress Table (Goal, Horizontal Bar, Count/Days) (Screenshot 4 Middle) -->
+        <div class="xl:col-span-4 sheet-card overflow-hidden">
+          <div class="bg-sage-500 text-white px-4 py-2.5 text-center">
+            <h3 class="text-sm font-semibold uppercase tracking-[0.14em]" data-i18n="progressLabel">PROGRESS</h3>
+            <p id="habit-progress-header-ratio" class="text-xs text-white/85 mt-0.5">180 / 372</p>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full border-collapse text-xs">
+              <thead>
+                <tr class="bg-sage-100 text-ink-800 border-b border-[#D5D1C7] text-[11px] uppercase tracking-wider">
+                  <th class="py-2 px-2 text-left font-semibold w-8">#</th>
+                  <th class="py-2 px-2 text-center font-semibold w-14" data-i18n="goalCol">GOAL</th>
+                  <th class="py-2 px-2 text-left font-semibold" data-i18n="percentCol">PERCENT</th>
+                  <th class="py-2 px-2 text-right font-semibold w-16" data-i18n="countCol">COUNT</th>
+                </tr>
+              </thead>
+              <tbody id="habit-progress-tbody" class="divide-y divide-[#E5E2D9]">
+                <!-- Rendered dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom Row: Daily Summary Card (Screenshot 1 Bottom) + Top-10 Most Consistent Habits (Screenshot 4 Bottom) -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+
+        <!-- Left (5 cols): ИТОГИ ДНЯ / DAILY SUMMARY -->
+        <div class="lg:col-span-5 sheet-card overflow-hidden">
+          <div class="bg-sage-500 text-white px-4 py-2.5 text-center">
+            <h3 class="text-sm font-semibold uppercase tracking-[0.14em]" data-i18n="daySummaryTitle">DAY SUMMARY</h3>
+          </div>
+          <div class="p-5 flex flex-col sm:flex-row items-center justify-around gap-5 bg-sage-50/40">
+            <div class="relative w-36 h-36 flex items-center justify-center flex-shrink-0">
+              <svg viewBox="0 0 120 120" class="w-full h-full -rotate-90">
+                <circle cx="60" cy="60" r="46" fill="none" stroke="#E4E2DC" stroke-width="14" />
+                <circle id="summary-donut" cx="60" cy="60" r="46" fill="none" stroke="#78967B" stroke-width="14"
+                  stroke-dasharray="289.03" stroke-dashoffset="130" class="chart-arc" />
+              </svg>
+              <div class="absolute inset-0 flex flex-col items-center justify-center">
+                <span class="text-[9px] uppercase tracking-wider text-ink-400 font-semibold" data-i18n="progressLabel">PROGRESS</span>
+                <span id="summary-pct" class="text-xl font-bold text-clay-600">52.5%</span>
+              </div>
+            </div>
+            <div class="text-center sm:text-left">
+              <p class="text-[11px] uppercase tracking-[0.14em] text-ink-400 font-semibold" data-i18n="dailyHabitsTitle">DAILY HABITS</p>
+              <p id="summary-ratio" class="text-2xl font-bold text-ink-800 mt-1">179 / 341</p>
+              <p class="text-xs text-ink-400 mt-1" id="summary-best-day"></p>
+            </div>
+          </div>
+          <table class="w-full text-xs border-t border-[#D8D4CA]">
+            <thead>
+              <tr class="bg-clay-100 text-ink-800 uppercase tracking-wider text-[11px]">
+                <th class="py-2 px-4 text-left font-semibold" data-i18n="metricCol">METRIC</th>
+                <th class="py-2 px-4 text-right font-semibold" data-i18n="countCol">AMOUNT</th>
+              </tr>
+            </thead>
+            <tbody id="habit-metrics-tbody" class="divide-y divide-[#E5E2D9] bg-paper">
+              <!-- Populated by JS -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Right (7 cols): ТОП-10 САМЫХ СТАБИЛЬНЫХ ПРИВЫЧЕК -->
+        <div class="lg:col-span-7 sheet-card overflow-hidden">
+          <div class="bg-sage-500 text-white px-4 py-2.5 text-center">
+            <h3 class="text-sm font-semibold uppercase tracking-[0.14em]" data-i18n="top10Title">
+              TOP-10 MOST CONSISTENT HABITS
+            </h3>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-xs">
+              <thead>
+                <tr class="bg-sage-100 text-ink-800 uppercase tracking-wider text-[11px] border-b border-[#D5D1C7]">
+                  <th class="py-2 px-4 text-left font-semibold w-10">#</th>
+                  <th class="py-2 px-4 text-left font-semibold" data-i18n="habitCol">HABIT</th>
+                  <th class="py-2 px-4 text-left font-semibold w-44 hidden sm:table-cell" data-i18n="stabilityCol">CONSISTENCY</th>
+                  <th class="py-2 px-4 text-right font-semibold w-24" data-i18n="percentCol">PERCENT</th>
+                </tr>
+              </thead>
+              <tbody id="habit-top10-tbody" class="divide-y divide-[#E5E2D9] bg-paper">
+                <!-- Auto-sorted Top 10 habits -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- MODULE 2: TASK TRACKER (Screenshot 3: KPIs, Donuts, Table, Kanban,  -->
+    <!-- Eisenhower Matrix)                                                  -->
+    <!-- =================================================================== -->
+    <section id="module-tasks" class="hidden space-y-6">
+
+      <!-- Top KPI Strip (Screenshot 3 Top) -->
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
+        <div class="sheet-card p-4 text-center">
+          <p id="kpi-total" class="text-2xl sm:text-3xl font-bold text-ink-800">14</p>
+          <p class="text-[11px] uppercase tracking-[0.14em] text-ink-400 mt-1 font-medium" data-i18n="kpiTotal">TOTAL TASKS</p>
+        </div>
+        <div class="sheet-card p-4 text-center">
+          <p id="kpi-active" class="text-2xl sm:text-3xl font-bold text-clay-600">4</p>
+          <p class="text-[11px] uppercase tracking-[0.14em] text-ink-400 mt-1 font-medium" data-i18n="kpiActive">IN WORK</p>
+        </div>
+        <div class="sheet-card p-4 text-center">
+          <p id="kpi-done" class="text-2xl sm:text-3xl font-bold text-sage-600">10</p>
+          <p class="text-[11px] uppercase tracking-[0.14em] text-ink-400 mt-1 font-medium" data-i18n="kpiDone">COMPLETED</p>
+        </div>
+        <div class="sheet-card p-4 text-center">
+          <p id="kpi-overdue" class="text-2xl sm:text-3xl font-bold text-red-700/80">0</p>
+          <p class="text-[11px] uppercase tracking-[0.14em] text-ink-400 mt-1 font-medium" data-i18n="kpiOverdue">OVERDUE</p>
+        </div>
+        <div class="sheet-card p-4 text-center col-span-2 sm:col-span-1">
+          <p id="kpi-soon" class="text-2xl sm:text-3xl font-bold text-amber-700/80">4</p>
+          <p class="text-[11px] uppercase tracking-[0.14em] text-ink-400 mt-1 font-medium" data-i18n="kpiSoon">DUE ≤ 7 DAYS</p>
+        </div>
+      </div>
+
+      <!-- Analytics Row: Upcoming Deadlines + Overall Progress Donut + Status Donut -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+
+        <!-- Upcoming Deadlines (Screenshot 3 Middle-Left) -->
+        <div class="lg:col-span-4 sheet-card p-5 flex flex-col">
+          <h3 class="text-xs font-semibold uppercase tracking-[0.18em] text-ink-600 mb-3" data-i18n="deadlinesTitle">
+            UPCOMING DEADLINES
+          </h3>
+          <div class="overflow-x-auto flex-1">
+            <table class="w-full text-xs">
+              <thead>
+                <tr class="text-[10px] uppercase tracking-wider text-ink-400 border-b border-[#E5E2D9]">
+                  <th class="pb-2 text-left font-semibold" data-i18n="taskCol">TASK</th>
+                  <th class="pb-2 text-left font-semibold" data-i18n="dueCol">DUE</th>
+                  <th class="pb-2 text-left font-semibold" data-i18n="assigneeCol">ASSIGNEE</th>
+                </tr>
+              </thead>
+              <tbody id="deadlines-tbody" class="divide-y divide-[#ECE9E1]">
+                <!-- Populated dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Task Progress Donut (Screenshot 3 Middle-Center) -->
+        <div class="lg:col-span-4 sheet-card p-5 flex flex-col items-center justify-center">
+          <h3 class="text-xs font-semibold uppercase tracking-[0.18em] text-ink-600 mb-4" data-i18n="progressLabel">
+            PROGRESS
+          </h3>
+          <div class="relative w-44 h-44 flex items-center justify-center">
+            <svg viewBox="0 0 140 140" class="w-full h-full -rotate-90">
+              <circle cx="70" cy="70" r="54" fill="none" stroke="#E4E2DC" stroke-width="18" />
+              <circle id="task-progress-donut" cx="70" cy="70" r="54" fill="none" stroke="#78967B" stroke-width="18"
+                stroke-dasharray="339.29" stroke-dashoffset="97" class="chart-arc" />
+            </svg>
+            <div class="absolute inset-0 flex items-center justify-center">
+              <span id="task-progress-pct" class="text-2xl sm:text-3xl font-bold text-clay-700">71.4%</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Status Breakdown Donut (Screenshot 3 Middle-Right) -->
+        <div class="lg:col-span-4 sheet-card p-5 flex flex-col items-center justify-between">
+          <h3 class="text-xs font-semibold uppercase tracking-[0.18em] text-ink-600 mb-3" data-i18n="statusesTitle">
+            STATUSES
+          </h3>
+          <div class="relative w-40 h-40 flex items-center justify-center">
+            <svg id="task-status-svg" viewBox="0 0 140 140" class="w-full h-full -rotate-90">
+              <!-- Multi-segment SVG donut rendered dynamically -->
+            </svg>
+          </div>
+          <div id="task-status-legend" class="grid grid-cols-2 gap-x-4 gap-y-1.5 text-[11px] mt-3 w-full max-w-[260px]">
+            <!-- Legend dynamically populated -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Sub-View Switcher (Table / Kanban / Eisenhower Matrix) + Filters + Add Task -->
+      <div class="sheet-card p-4 flex flex-wrap items-center justify-between gap-3">
+        <!-- Sub-view tabs matching bottom of Screenshot 3 -->
+        <div class="flex items-center bg-linen p-1 rounded-lg border border-[#DDD9D0] gap-1">
+          <button onclick="setTaskView('table')" id="tview-table"
+            class="task-view-btn px-3 py-1.5 rounded-md text-xs font-medium transition-colors" data-i18n="viewTable">
+            ☰ Task Table
+          </button>
+          <button onclick="setTaskView('kanban')" id="tview-kanban"
+            class="task-view-btn px-3 py-1.5 rounded-md text-xs font-medium transition-colors" data-i18n="viewKanban">
+            ▦ Kanban Board
+          </button>
+          <button onclick="setTaskView('matrix')" id="tview-matrix"
+            class="task-view-btn px-3 py-1.5 rounded-md text-xs font-medium transition-colors" data-i18n="viewMatrix">
+            ⊞ Eisenhower Matrix
+          </button>
+        </div>
+
+        <!-- Search & Filter Controls -->
+        <div class="flex flex-wrap items-center gap-2">
+          <input type="text" id="task-search" oninput="renderTasks()" placeholder="Search..."
+            class="bg-linen border border-[#D8D4CA] rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:border-sage-500 w-36 sm:w-44" />
+          <select id="task-filter-status" onchange="renderTasks()"
+            class="bg-linen border border-[#D8D4CA] rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:border-sage-500 cursor-pointer">
+            <option value="all" data-i18n="allStatuses">All Statuses</option>
+            <option value="done" data-i18n="stDone">Completed</option>
+            <option value="in_progress" data-i18n="stInProgress">In Progress</option>
+            <option value="waiting" data-i18n="stWaiting">Waiting</option>
+            <option value="not_started" data-i18n="stNotStarted">Not Started</option>
+          </select>
+          <button onclick="openTaskModal()"
+            class="px-3.5 py-1.5 rounded-lg bg-sage-500 hover:bg-sage-600 text-white text-xs font-semibold transition-colors shadow-sm flex items-center gap-1.5">
+            <span>+</span> <span data-i18n="addTaskBtn">New Task</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- View 1: Task Table -->
+      <div id="task-container-table" class="sheet-card overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs border-collapse">
+            <thead>
+              <tr class="bg-clay-100 text-ink-800 uppercase tracking-wider text-[11px] border-b border-[#D5D1C7]">
+                <th class="py-3 px-3 text-left font-semibold min-w-[180px]" data-i18n="taskCol">TASK</th>
+                <th class="py-3 px-3 text-left font-semibold whitespace-nowrap" data-i18n="dueCol">DUE DATE</th>
+                <th class="py-3 px-3 text-left font-semibold whitespace-nowrap" data-i18n="assigneeCol">ASSIGNEE</th>
+                <th class="py-3 px-3 text-left font-semibold whitespace-nowrap" data-i18n="statusCol">STATUS</th>
+                <th class="py-3 px-3 text-left font-semibold whitespace-nowrap" data-i18n="categoryCol">CATEGORY</th>
+                <th class="py-3 px-3 text-left font-semibold whitespace-nowrap" data-i18n="priorityCol">PRIORITY</th>
+                <th class="py-3 px-3 text-center font-semibold whitespace-nowrap" data-i18n="urgentCol">URGENT</th>
+                <th class="py-3 px-3 text-center font-semibold whitespace-nowrap" data-i18n="importantCol">IMPORTANT</th>
+                <th class="py-3 px-3 text-right font-semibold w-14"></th>
+              </tr>
+            </thead>
+            <tbody id="task-table-tbody" class="divide-y divide-[#E7E4DC] bg-paper">
+              <!-- Populated by JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- View 2: Kanban Board -->
+      <div id="task-container-kanban" class="hidden grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+        <!-- Populated by JS -->
+      </div>
+
+      <!-- View 3: Eisenhower Matrix -->
+      <div id="task-container-matrix" class="hidden grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Populated by JS -->
+      </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- MODULE 3: PERSONAL FINANCE & GOALS (Screenshots 5 & 6)              -->
+    <!-- =================================================================== -->
+    <section id="module-finance" class="hidden space-y-6">
+
+      <!-- Top Row: Remaining to Spend + Income Structure Pie + Where Money Went Pie -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+
+        <!-- Left (4 cols): Remaining Balance Card (Screenshot 6 Top) + Plan vs Actual Mini Bar -->
+        <div class="lg:col-span-4 sheet-card p-6 flex flex-col justify-between bg-paper">
+          <div class="text-center border border-[#D8D4CA] rounded-xl p-5 bg-linen/60">
+            <p class="text-[11px] uppercase tracking-[0.22em] text-ink-600 font-semibold" data-i18n="remainingTitle">
+              REMAINING TO SPEND
+            </p>
+            <p id="fin-remaining-amount" class="text-3xl sm:text-4xl font-bold text-ink-800 mt-3 tracking-tight">
+              227 896,00 ₽
+            </p>
+            <p id="fin-status-badge" class="inline-block mt-3 text-[11px] uppercase tracking-[0.2em] font-semibold px-3 py-1 rounded-full bg-sage-100 text-sage-700">
+              ON TRACK
+            </p>
+          </div>
+
+          <!-- Quick Cashflow Summary (Income vs Expense Bars from Screenshot 5 Top-Left) -->
+          <div class="mt-5 space-y-3 text-xs">
+            <div>
+              <div class="flex justify-between mb-1">
+                <span class="font-medium text-ink-600" data-i18n="totalIncomeLabel">Total Income (Actual)</span>
+                <span id="fin-total-income" class="font-bold text-sage-700">0</span>
+              </div>
+              <div class="w-full h-2.5 bg-linen rounded-full overflow-hidden">
+                <div id="fin-income-bar" class="h-full bg-sage-600 rounded-full bar-fill" style="width: 100%"></div>
+              </div>
+            </div>
+            <div>
+              <div class="flex justify-between mb-1">
+                <span class="font-medium text-ink-600" data-i18n="totalExpenseLabel">Total Expenses (Actual)</span>
+                <span id="fin-total-expense" class="font-bold text-clay-700">0</span>
+              </div>
+              <div class="w-full h-2.5 bg-linen rounded-full overflow-hidden">
+                <div id="fin-expense-bar" class="h-full bg-clay-500 rounded-full bar-fill" style="width: 30%"></div>
+              </div>
+            </div>
+            <div class="pt-1 flex justify-between text-[11px] text-ink-400 border-t border-[#E6E2D9]">
+              <span data-i18n="savingsRateLabel">Savings Rate</span>
+              <span id="fin-savings-rate" class="font-semibold text-sage-700">0%</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Middle (4 cols): Income Structure Pie Chart (Screenshot 5 Top-Center) -->
+        <div class="lg:col-span-4 sheet-card p-5 flex flex-col">
+          <h3 class="text-xs font-semibold uppercase tracking-[0.18em] text-ink-600 text-center mb-4" data-i18n="incomeStructTitle">
+            INCOME STRUCTURE
+          </h3>
+          <div class="flex-1 flex flex-col sm:flex-row items-center justify-center gap-5">
+            <svg id="fin-income-pie" viewBox="0 0 180 180" class="w-40 h-40 flex-shrink-0"></svg>
+            <div id="fin-income-legend" class="space-y-1.5 text-xs w-full sm:w-auto"></div>
+          </div>
+        </div>
+
+        <!-- Right (4 cols): Where the Money Went Pie Chart (Screenshot 6 Middle) -->
+        <div class="lg:col-span-4 sheet-card p-5 flex flex-col">
+          <h3 class="text-xs font-semibold uppercase tracking-[0.18em] text-ink-600 text-center mb-4" data-i18n="whereMoneyWentTitle">
+            WHERE THE MONEY WENT
+          </h3>
+          <div class="flex-1 flex flex-col sm:flex-row items-center justify-center gap-5">
+            <svg id="fin-expense-pie" viewBox="0 0 180 180" class="w-40 h-40 flex-shrink-0"></svg>
+            <div id="fin-expense-legend" class="space-y-1.5 text-xs w-full sm:w-auto max-h-44 overflow-y-auto pr-1"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Middle Row: Income Summary + Expense Summary (Screenshot 5 Bottom) -->
+      <div class="grid grid-cols-1 xl:grid-cols-12 gap-5 items-start">
+
+        <!-- Left (5 cols): Income Summary + Savings & Goals Tracker -->
+        <div class="xl:col-span-5 space-y-5">
+          <!-- Income Summary Table -->
+          <div class="sheet-card overflow-hidden">
+            <div class="bg-sage-500 text-white px-4 py-2.5 flex items-center justify-between">
+              <h3 class="text-xs sm:text-sm font-semibold uppercase tracking-[0.14em]" data-i18n="incomeSummaryTitle">
+                INCOME SUMMARY
+              </h3>
+              <button onclick="addFinanceRow('income')"
+                class="px-2.5 py-1 rounded bg-white/15 hover:bg-white/25 text-[11px] font-medium transition-colors">
+                + <span data-i18n="addRowBtn">Add</span>
+              </button>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-xs">
+                <thead>
+                  <tr class="bg-sage-100 text-ink-800 uppercase tracking-wider text-[10px] border-b border-[#D5D1C7]">
+                    <th class="py-2 px-3 text-left font-semibold" data-i18n="categoryCol">CATEGORY</th>
+                    <th class="py-2 px-2 text-right font-semibold" data-i18n="planCol">PLAN</th>
+                    <th class="py-2 px-2 text-right font-semibold" data-i18n="actualCol">ACTUAL</th>
+                    <th class="py-2 px-2 text-right font-semibold" data-i18n="progressLabel">PROG.</th>
+                    <th class="py-2 px-2 w-7"></th>
+                  </tr>
+                </thead>
+                <tbody id="fin-income-tbody" class="divide-y divide-[#E7E4DC] bg-paper"></tbody>
+                <tfoot id="fin-income-tfoot" class="bg-sage-50 font-bold border-t border-[#C9C5BB]"></tfoot>
+              </table>
+            </div>
+          </div>
+
+          <!-- Bonus: Savings & Goals Tracker (Screenshot 6 Right Side & Bottom Tab) -->
+          <div class="sheet-card overflow-hidden">
+            <div class="bg-sage-600 text-white px-4 py-2.5 flex items-center justify-between">
+              <h3 class="text-xs sm:text-sm font-semibold uppercase tracking-[0.14em]" data-i18n="goalsTrackerTitle">
+                SAVINGS & GOAL TRACKER
+              </h3>
+              <button onclick="addGoalRow()"
+                class="px-2.5 py-1 rounded bg-white/15 hover:bg-white/25 text-[11px] font-medium transition-colors">
+                + <span data-i18n="addGoalBtn">Goal</span>
+              </button>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-xs">
+                <thead>
+                  <tr class="bg-sage-100 text-ink-800 uppercase tracking-wider text-[10px] border-b border-[#D5D1C7]">
+                    <th class="py-2 px-3 text-left font-semibold" data-i18n="categoryCol">GOAL</th>
+                    <th class="py-2 px-2 text-right font-semibold" data-i18n="savedCol">SAVED</th>
+                    <th class="py-2 px-2 text-right font-semibold" data-i18n="targetCol">TARGET</th>
+                    <th class="py-2 px-3 text-left font-semibold w-28" data-i18n="progressLabel">PROGRESS</th>
+                    <th class="py-2 px-2 w-7"></th>
+                  </tr>
+                </thead>
+                <tbody id="fin-goals-tbody" class="divide-y divide-[#E7E4DC] bg-paper"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right (7 cols): Expense Summary Table (Screenshot 5 Center-Right) -->
+        <div class="xl:col-span-7 sheet-card overflow-hidden">
+          <div class="bg-clay-400 text-white px-4 py-2.5 flex items-center justify-between">
+            <h3 class="text-xs sm:text-sm font-semibold uppercase tracking-[0.14em]" data-i18n="expenseSummaryTitle">
+              EXPENSE SUMMARY
+            </h3>
+            <button onclick="addFinanceRow('expense')"
+              class="px-2.5 py-1 rounded bg-white/15 hover:bg-white/25 text-[11px] font-medium transition-colors">
+              + <span data-i18n="addRowBtn">Add</span>
+            </button>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-xs">
+              <thead>
+                <tr class="bg-clay-100 text-ink-800 uppercase tracking-wider text-[10px] border-b border-[#D5D1C7]">
+                  <th class="py-2 px-3 text-left font-semibold" data-i18n="categoryCol">CATEGORY</th>
+                  <th class="py-2 px-2 text-right font-semibold" data-i18n="planCol">PLAN</th>
+                  <th class="py-2 px-2 text-right font-semibold" data-i18n="actualCol">ACTUAL</th>
+                  <th class="py-2 px-3 text-right font-semibold" data-i18n="progressLabel">PROGRESS</th>
+                  <th class="py-2 px-2 w-7"></th>
+                </tr>
+              </thead>
+              <tbody id="fin-expense-tbody" class="divide-y divide-[#E7E4DC] bg-paper"></tbody>
+              <tfoot id="fin-expense-tfoot" class="bg-clay-50 font-bold border-t border-[#C9C5BB]"></tfoot>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom Row: TOP-20 Expense Categories (Screenshot 6 Bottom) -->
+      <div class="sheet-card overflow-hidden">
+        <div class="bg-clay-400 text-white px-4 py-2.5 text-center">
+          <h3 class="text-xs sm:text-sm font-semibold uppercase tracking-[0.14em]" data-i18n="top20ExpensesTitle">
+            TOP-20 EXPENSE CATEGORIES
+          </h3>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs">
+            <thead>
+              <tr class="bg-clay-100 text-ink-800 uppercase tracking-wider text-[10px] border-b border-[#D5D1C7]">
+                <th class="py-2 px-4 text-left font-semibold w-12">#</th>
+                <th class="py-2 px-4 text-left font-semibold" data-i18n="categoryCol">CATEGORY</th>
+                <th class="py-2 px-4 text-left font-semibold hidden sm:table-cell w-1/3" data-i18n="shareCol">SHARE</th>
+                <th class="py-2 px-4 text-right font-semibold" data-i18n="actualCol">ACTUAL</th>
+                <th class="py-2 px-4 text-right font-semibold w-24" data-i18n="percentCol">PERCENT</th>
+              </tr>
+            </thead>
+            <tbody id="fin-top20-tbody" class="divide-y divide-[#E7E4DC] bg-paper"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ===================================================================== -->
+  <!-- MODAL: ADD / EDIT TASK                                                -->
+  <!-- ===================================================================== -->
+  <div id="task-modal" class="hidden fixed inset-0 z-50 bg-ink-800/40 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-paper border border-[#D8D4CA] rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
+      <div class="bg-sage-500 text-white px-5 py-3.5 flex items-center justify-between">
+        <h3 id="task-modal-title" class="font-semibold text-sm uppercase tracking-wider" data-i18n="addTaskBtn">New Task</h3>
+        <button onclick="closeTaskModal()" class="text-white/80 hover:text-white text-lg leading-none">&times;</button>
+      </div>
+      <form id="task-form" onsubmit="saveTaskForm(event)" class="p-5 space-y-3.5 text-xs">
+        <input type="hidden" id="tf-id" />
+        <div>
+          <label class="block text-[11px] uppercase tracking-wider text-ink-600 font-semibold mb-1" data-i18n="taskCol">Task</label>
+          <input type="text" id="tf-title" required
+            class="w-full bg-linen border border-[#D8D4CA] rounded-lg px-3 py-2 focus:outline-none focus:border-sage-500" />
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-[11px] uppercase tracking-wider text-ink-600 font-semibold mb-1" data-i18n="dueCol">Due Date</label>
+            <input type="date" id="tf-due" required
+              class="w-full bg-linen border border-[#D8D4CA] rounded-lg px-3 py-2 focus:outline-none focus:border-sage-500" />
+          </div>
+          <div>
+            <label class="block text-[11px] uppercase tracking-wider text-ink-600 font-semibold mb-1" data-i18n="assigneeCol">Assignee</label>
+            <input type="text" id="tf-assignee" required placeholder="Artem"
+              class="w-full bg-linen border border-[#D8D4CA] rounded-lg px-3 py-2 focus:outline-none focus:border-sage-500" />
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-[11px] uppercase tracking-wider text-ink-600 font-semibold mb-1" data-i18n="statusCol">Status</label>
+            <select id="tf-status" class="w-full bg-linen border border-[#D8D4CA] rounded-lg px-3 py-2 focus:outline-none focus:border-sage-500">
+              <option value="not_started" data-i18n="stNotStarted">Not Started</option>
+              <option value="in_progress" data-i18n="stInProgress">In Progress</option>
+              <option value="waiting" data-i18n="stWaiting">Waiting</option>
+              <option value="done" data-i18n="stDone">Completed</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-[11px] uppercase tracking-wider text-ink-600 font-semibold mb-1" data-i18n="priorityCol">Priority</label>
+            <select id="tf-priority" class="w-full bg-linen border border-[#D8D4CA] rounded-lg px-3 py-2 focus:outline-none focus:border-sage-500">
+              <option value="critical" data-i18n="prCritical">Critical</option>
+              <option value="high" data-i18n="prHigh">High</option>
+              <option value="medium" data-i18n="prMedium">Medium</option>
+              <option value="low" data-i18n="prLow">Low</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <label class="block text-[11px] uppercase tracking-wider text-ink-600 font-semibold mb-1" data-i18n="categoryCol">Category</label>
+          <select id="tf-category" class="w-full bg-linen border border-[#D8D4CA] rounded-lg px-3 py-2 focus:outline-none focus:border-sage-500">
+            <option value="work" data-i18n="catWork">Work / Study</option>
+            <option value="business" data-i18n="catBusiness">Business</option>
+            <option value="selfdev" data-i18n="catSelfdev">Self-Development</option>
+            <option value="personal" data-i18n="catPersonal">Personal</option>
+            <option value="health" data-i18n="catHealth">Health & Sport</option>
+            <option value="home" data-i18n="catHome">Home Chores</option>
+          </select>
+        </div>
+        <div class="flex items-center gap-6 pt-1">
+          <label class="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" id="tf-urgent" class="habit-box" />
+            <span class="font-medium text-ink-800" data-i18n="urgentCol">Urgent</span>
+          </label>
+          <label class="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" id="tf-important" class="habit-box" />
+            <span class="font-medium text-ink-800" data-i18n="importantCol">Important</span>
+          </label>
+        </div>
+        <div class="flex justify-end gap-2 pt-3 border-t border-[#E5E2D9]">
+          <button type="button" onclick="closeTaskModal()"
+            class="px-4 py-2 rounded-lg bg-linen hover:bg-clay-100 text-ink-600 font-medium transition-colors" data-i18n="cancelBtn">
+            Cancel
+          </button>
+          <button type="submit"
+            class="px-5 py-2 rounded-lg bg-sage-500 hover:bg-sage-600 text-white font-semibold transition-colors" data-i18n="saveBtn">
+            Save
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- MODAL: DATA MANAGEMENT (Export / Import / Reset Demo)                 -->
+  <!-- ===================================================================== -->
+  <div id="data-modal" class="hidden fixed inset-0 z-50 bg-ink-800/40 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-paper border border-[#D8D4CA] rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
+      <div class="bg-clay-400 text-white px-5 py-3.5 flex items-center justify-between">
+        <h3 class="font-semibold text-sm uppercase tracking-wider" data-i18n="dataModalTitle">Data & Backup</h3>
+        <button onclick="closeDataModal()" class="text-white/80 hover:text-white text-lg leading-none">&times;</button>
+      </div>
+      <div class="p-5 space-y-3 text-xs">
+        <p class="text-ink-600 leading-relaxed" data-i18n="dataModalDesc">
+          All your habits, tasks, and financial data are saved automatically in your browser. You can export a backup file or restore the original demo template.
+        </p>
+        <div class="grid grid-cols-1 gap-2.5 pt-2">
+          <button onclick="exportData()"
+            class="w-full py-2.5 px-4 rounded-xl bg-sage-500 hover:bg-sage-600 text-white font-semibold transition-colors flex items-center justify-center gap-2">
+            <span>↓</span> <span data-i18n="exportBtn">Export Backup (JSON)</span>
+          </button>
+          <label class="w-full py-2.5 px-4 rounded-xl bg-linen hover:bg-sage-100 border border-[#D8D4CA] text-ink-800 font-semibold transition-colors flex items-center justify-center gap-2 cursor-pointer">
+            <span>↑</span> <span data-i18n="importBtn">Import Backup (JSON)</span>
+            <input type="file" accept=".json" onchange="importData(event)" class="hidden" />
+          </label>
+          <button onclick="resetDemoData()"
+            class="w-full py-2.5 px-4 rounded-xl bg-clay-100 hover:bg-clay-200 text-clay-700 font-semibold transition-colors flex items-center justify-center gap-2">
+            <span>↺</span> <span data-i18n="resetBtn">Reset to Template Demo Data</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container (Replaces alert()) -->
+  <div id="toast-box" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- ===================================================================== -->
+  <!-- APPLICATION LOGIC & STATE MANAGEMENT                                  -->
+  <!-- ===================================================================== -->
+  <script>
+    /* -----------------------------------------------------------------------
+     * 1. INTERNATIONALIZATION DICTIONARY (EN & RU matching the screenshots)
+     * --------------------------------------------------------------------- */
+    const I18N = {
+      ru: {
+        appTitle: 'АНАЛИТИКА ЖИЗНИ',
+        appSubtitle: 'Привычки · Задачи · Финансы',
+        navHabits: 'Аналитика привычек',
+        navTasks: 'Трекер задач',
+        navFinance: 'Финансы и цели',
+        dataBtn: 'Данные',
+        habitSubtitle: 'АНАЛИТИКА ПРИВЫЧЕК',
+        monthLabel: 'МЕСЯЦ',
+        yearLabel: 'ГОД',
+        dailyTrendTitle: 'ЕЖЕДНЕВНЫЙ ПРОГРЕСС',
+        progressLabel: 'ПРОГРЕСС',
+        habitsShort: 'ПРИВЫЧКИ',
+        dailyHabitsTitle: 'ЕЖЕДНЕВНЫЕ ПРИВЫЧКИ',
+        addHabitBtn: 'Добавить',
+        goalCol: 'ЦЕЛЬ',
+        percentCol: 'ПРОЦЕНТ',
+        countCol: 'КОЛИЧЕСТВО',
+        daySummaryTitle: 'ИТОГИ ДНЯ',
+        metricCol: 'ПОКАЗАТЕЛЬ',
+        top10Title: 'ТОП-10 САМЫХ СТАБИЛЬНЫХ ПРИВЫЧЕК',
+        habitCol: 'ПРИВЫЧКА',
+        stabilityCol: 'СТАБИЛЬНОСТЬ',
+        weekPrefix: 'НЕДЕЛЯ',
+        weekdays: ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'],
+        months: ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'],
+        mCompletedChecks: 'Выполнено отметок',
+        mPerfectDays: 'Дней на 100%',
+        mBestStreak: 'Лучшая серия привычки',
+        mActiveHabits: 'Активных привычек',
+        bestDayPrefix: 'Лучший день:',
+        kpiTotal: 'ВСЕГО ЗАДАЧ',
+        kpiActive: 'В РАБОТЕ',
+        kpiDone: 'ВЫПОЛНЕНО',
+        kpiOverdue: 'ПРОСРОЧЕНО',
+        kpiSoon: 'СРОК ≤ 7 ДН.',
+        deadlinesTitle: 'БЛИЖАЙШИЕ ДЕДЛАЙНЫ',
+        statusesTitle: 'СТАТУСЫ',
+        viewTable: '☰ Таблица задач',
+        viewKanban: '▦ Канбан-доска',
+        viewMatrix: '⊞ Матрица Эйзенхауэра',
+        allStatuses: 'Все статусы',
+        addTaskBtn: 'Новая задача',
+        taskCol: 'ЗАДАЧА',
+        dueCol: 'СРОК',
+        assigneeCol: 'ИСПОЛНИТЕЛЬ',
+        statusCol: 'СТАТУС',
+        categoryCol: 'КАТЕГОРИЯ',
+        priorityCol: 'ПРИОРИТЕТ',
+        urgentCol: 'СРОЧНО',
+        importantCol: 'ВАЖНО',
+        stDone: 'Выполнено',
+        stInProgress: 'В процессе',
+        stWaiting: 'В ожидании',
+        stNotStarted: 'Не начато',
+        prCritical: 'Критический',
+        prHigh: 'Высокий',
+        prMedium: 'Средний',
+        prLow: 'Низкий',
+        catWork: 'Работа / Учёба',
+        catBusiness: 'Бизнес',
+        catSelfdev: 'Саморазвитие',
+        catPersonal: 'Личное',
+        catHealth: 'Здоровье и спорт',
+        catHome: 'Домашние дела',
+        q1Title: 'Сделать сразу (Срочно и Важно)',
+        q2Title: 'Запланировать (Важно, не срочно)',
+        q3Title: 'Делегировать (Срочно, не важно)',
+        q4Title: 'Убрать / Потом (Не срочно, не важно)',
+        remainingTitle: 'ОСТАТОК ДЛЯ ТРАТ',
+        onTrack: 'ИДЁМ ПО ПЛАНУ',
+        overBudget: 'ПРЕВЫШЕНИЕ БЮДЖЕТА',
+        totalIncomeLabel: 'Общий доход (Факт)',
+        totalExpenseLabel: 'Общий расход (Факт)',
+        savingsRateLabel: 'Норма сбережений',
+        incomeStructTitle: 'СТРУКТУРА ДОХОДОВ',
+        whereMoneyWentTitle: 'КУДА УШЛИ ДЕНЬГИ',
+        incomeSummaryTitle: 'СВОДКА ДОХОДОВ',
+        expenseSummaryTitle: 'СВОДКА РАСХОДОВ',
+        goalsTrackerTitle: 'БОНУС: ТРЕКЕР ЦЕЛЕЙ',
+        top20ExpensesTitle: 'ТОП-20 КАТЕГОРИЙ РАСХОДОВ',
+        addRowBtn: 'Добавить',
+        addGoalBtn: 'Цель',
+        planCol: 'ПЛАН',
+        actualCol: 'ФАКТ',
+        savedCol: 'НАКОПЛЕНО',
+        targetCol: 'ЦЕЛЬ',
+        shareCol: 'ДОЛЯ',
+        totalLabel: 'ИТОГО',
+        cancelBtn: 'Отмена',
+        saveBtn: 'Сохранить',
+        dataModalTitle: 'Данные и резервная копия',
+        dataModalDesc: 'Все привычки, задачи и финансы сохраняются автоматически в браузере. Вы можете скачать JSON-бэкап или вернуть демо-данные шаблона.',
+        exportBtn: 'Экспорт резервной копии (JSON)',
+        importBtn: 'Импорт резервной копии (JSON)',
+        resetBtn: 'Сбросить к демо-данным шаблона',
+        toastSaved: 'Сохранено',
+        toastReset: 'Демо-данные восстановлены',
+        toastExported: 'Резервная копия скачана',
+        toastImported: 'Данные успешно импортированы',
+        toastError: 'Ошибка чтения файла',
+        noDeadlines: 'Все задачи выполнены!',
+        newHabitPlaceholder: 'Новая привычка...',
+        newCategoryPlaceholder: 'Новая категория',
+        newGoalPlaceholder: 'Новая цель',
+        andMore: 'и ещё'
+      },
+      en: {
+        appTitle: 'LIFE ANALYTICS',
+        appSubtitle: 'Habits · Tasks · Finance',
+        navHabits: 'Habit Analytics',
+        navTasks: 'Task Tracker',
+        navFinance: 'Finance & Goals',
+        dataBtn: 'Data',
+        habitSubtitle: 'HABIT ANALYTICS',
+        monthLabel: 'MONTH',
+        yearLabel: 'YEAR',
+        dailyTrendTitle: 'DAILY COMPLETION RATE',
+        progressLabel: 'PROGRESS',
+        habitsShort: 'HABITS',
+        dailyHabitsTitle: 'DAILY HABITS',
+        addHabitBtn: 'Add Habit',
+        goalCol: 'GOAL',
+        percentCol: 'PERCENT',
+        countCol: 'COUNT',
+        daySummaryTitle: 'DAY SUMMARY',
+        metricCol: 'METRIC',
+        top10Title: 'TOP-10 MOST CONSISTENT HABITS',
+        habitCol: 'HABIT',
+        stabilityCol: 'CONSISTENCY',
+        weekPrefix: 'WEEK',
+        weekdays: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+        months: ['January','February','March','April','May','June','July','August','September','October','November','December'],
+        mCompletedChecks: 'Total Check-ins',
+        mPerfectDays: '100% Perfect Days',
+        mBestStreak: 'Best Habit Streak',
+        mActiveHabits: 'Active Habits',
+        bestDayPrefix: 'Best day:',
+        kpiTotal: 'TOTAL TASKS',
+        kpiActive: 'IN WORK',
+        kpiDone: 'COMPLETED',
+        kpiOverdue: 'OVERDUE',
+        kpiSoon: 'DUE ≤ 7 DAYS',
+        deadlinesTitle: 'UPCOMING DEADLINES',
+        statusesTitle: 'STATUSES',
+        viewTable: '☰ Task Table',
+        viewKanban: '▦ Kanban Board',
+        viewMatrix: '⊞ Eisenhower Matrix',
+        allStatuses: 'All Statuses',
+        addTaskBtn: 'New Task',
+        taskCol: 'TASK',
+        dueCol: 'DUE DATE',
+        assigneeCol: 'ASSIGNEE',
+        statusCol: 'STATUS',
+        categoryCol: 'CATEGORY',
+        priorityCol: 'PRIORITY',
+        urgentCol: 'URGENT',
+        importantCol: 'IMPORTANT',
+        stDone: 'Completed',
+        stInProgress: 'In Progress',
+        stWaiting: 'Waiting',
+        stNotStarted: 'Not Started',
+        prCritical: 'Critical',
+        prHigh: 'High',
+        prMedium: 'Medium',
+        prLow: 'Low',
+        catWork: 'Work / Study',
+        catBusiness: 'Business',
+        catSelfdev: 'Self-Development',
+        catPersonal: 'Personal',
+        catHealth: 'Health & Sport',
+        catHome: 'Home Chores',
+        q1Title: 'Do First (Urgent & Important)',
+        q2Title: 'Schedule (Important, Not Urgent)',
+        q3Title: 'Delegate (Urgent, Not Important)',
+        q4Title: 'Eliminate / Later (Neither)',
+        remainingTitle: 'REMAINING TO SPEND',
+        onTrack: 'ON TRACK',
+        overBudget: 'OVER BUDGET',
+        totalIncomeLabel: 'Total Income (Actual)',
+        totalExpenseLabel: 'Total Expenses (Actual)',
+        savingsRateLabel: 'Savings Rate',
+        incomeStructTitle: 'INCOME STRUCTURE',
+        whereMoneyWentTitle: 'WHERE THE MONEY WENT',
+        incomeSummaryTitle: 'INCOME SUMMARY',
+        expenseSummaryTitle: 'EXPENSE SUMMARY',
+        goalsTrackerTitle: 'BONUS: GOAL TRACKER',
+        top20ExpensesTitle: 'TOP-20 EXPENSE CATEGORIES',
+        addRowBtn: 'Add',
+        addGoalBtn: 'Goal',
+        planCol: 'PLAN',
+        actualCol: 'ACTUAL',
+        savedCol: 'SAVED',
+        targetCol: 'TARGET',
+        shareCol: 'SHARE',
+        totalLabel: 'TOTAL',
+        cancelBtn: 'Cancel',
+        saveBtn: 'Save',
+        dataModalTitle: 'Data & Backup',
+        dataModalDesc: 'All habits, tasks, and finances are saved automatically in your browser. Export a JSON backup or reset to the original template demo data.',
+        exportBtn: 'Export Backup (JSON)',
+        importBtn: 'Import Backup (JSON)',
+        resetBtn: 'Reset to Template Demo Data',
+        toastSaved: 'Saved',
+        toastReset: 'Template demo data restored',
+        toastExported: 'Backup JSON downloaded',
+        toastImported: 'Data imported successfully',
+        toastError: 'Failed to read JSON file',
+        noDeadlines: 'All tasks are completed!',
+        newHabitPlaceholder: 'New habit...',
+        newCategoryPlaceholder: 'New category',
+        newGoalPlaceholder: 'New goal',
+        andMore: 'and'
+      }
+    };
+
+    const STORAGE_KEY = 'life_os_excel_web_v1';
+
+    /* -----------------------------------------------------------------------
+     * 2. INITIAL DEMO DATA (Faithful to all 6 uploaded screenshots)
+     * --------------------------------------------------------------------- */
+    function buildDemoState() {
+      // Pre-populate realistic July 2026 checkmarks matching screenshots 1, 2, 4
+      const checks = {};
+      const monthKey = '2026-06'; // JS month 6 = July (0-indexed)
+      checks[monthKey] = {};
+
+      const habitPatterns = [
+        // 1. Workout: 31/31 (100% like Screenshot 4!)
+        Array.from({ length: 31 }, (_, i) => i + 1),
+        // 2. Reading 30 min: 13/31 (42%)
+        [1,2,3,5,6,8,10,12,14,17,19,22,25],
+        // 3. Learning English: 14/31 (45%)
+        [1,2,4,5,7,9,11,13,15,18,20,23,26,28],
+        // 4. Meditation: 14/31 (45%)
+        [1,3,4,6,8,10,12,14,16,18,21,24,27,29],
+        // 5. No social media before noon: 13/31 (42%)
+        [1,2,5,7,9,11,13,15,17,19,21,24,27],
+        // 6. Day planning: 14/31 (45%)
+        [1,2,3,4,6,8,10,13,15,17,20,22,25,28],
+        // 7. Finance tracking: 14/31 (45%)
+        [1,3,5,7,8,11,14,16,18,20,22,25,27,30],
+        // 8. 10,000 steps: 12/31 (39%)
+        [1,2,4,7,10,12,15,18,20,23,26,29],
+        // 9. Project work: 13/31 (42%)
+        [1,2,3,6,8,10,12,15,17,19,22,25,28],
+        // 10. Sleep 8 hours: 12/31 (39%)
+        [1,4,6,9,11,14,16,19,21,24,27,30],
+        // 11. Journal / Reflection: 15/31 (48%)
+        [1,2,3,5,7,9,11,13,15,17,19,21,24,27,30],
+        // 12. Water 2L: 15/31 (48%)
+        [1,2,4,6,8,10,12,14,16,18,20,22,25,28,31]
+      ];
+
+      habitPatterns.forEach((days, idx) => {
+        const hId = 'h' + (idx + 1);
+        checks[monthKey][hId] = {};
+        days.forEach(d => { checks[monthKey][hId][d] = true; });
+      });
+
+      return {
+        lang: 'en', // Instant toggle to 'ru' available in header
+        currency: '₽',
+        activeModule: 'habits',
+        habitMonth: 6, // July
+        habitYear: 2026,
+        taskView: 'table',
+        habits: [
+          { id: 'h1', nameRu: 'Тренировка', nameEn: 'Workout', goal: 31 },
+          { id: 'h2', nameRu: 'Чтение 30 минут', nameEn: 'Reading 30 min', goal: 31 },
+          { id: 'h3', nameRu: 'Изучение английского', nameEn: 'Learning English', goal: 31 },
+          { id: 'h4', nameRu: 'Медитация', nameEn: 'Meditation', goal: 31 },
+          { id: 'h5', nameRu: 'Без соцсетей до обеда', nameEn: 'No social media till noon', goal: 31 },
+          { id: 'h6', nameRu: 'Планирование дня', nameEn: 'Day planning', goal: 31 },
+          { id: 'h7', nameRu: 'Учёт финансов', nameEn: 'Finance tracking', goal: 31 },
+          { id: 'h8', nameRu: '10000 шагов', nameEn: '10,000 steps', goal: 31 },
+          { id: 'h9', nameRu: 'Работа над проектом', nameEn: 'Project work', goal: 31 },
+          { id: 'h10', nameRu: 'Сон 8 часов', nameEn: 'Sleep 8 hours', goal: 31 },
+          { id: 'h11', nameRu: 'Дневник / рефлексия', nameEn: 'Journal / Reflection', goal: 31 },
+          { id: 'h12', nameRu: 'Вода 2 литра', nameEn: 'Drink 2L water', goal: 31 }
+        ],
+        habitChecks: checks,
+
+        // 14 Tasks matching Screenshot 3 (10 Completed, 4 Active = 71.4%)
+        tasks: [
+          { id: 't1', titleRu: 'Подготовить квартальный отчёт', titleEn: 'Prepare quarterly report', due: '2026-06-15', assignee: 'Артем', status: 'done', category: 'work', priority: 'high', urgent: true, important: true },
+          { id: 't2', titleRu: 'Обновить учебный план', titleEn: 'Update study roadmap', due: '2026-06-16', assignee: 'Артем', status: 'done', category: 'work', priority: 'high', urgent: false, important: true },
+          { id: 't3', titleRu: 'Записаться к стоматологу', titleEn: 'Book dentist appointment', due: '2026-06-18', assignee: 'Егор', status: 'done', category: 'personal', priority: 'medium', urgent: false, important: true },
+          { id: 't4', titleRu: 'Пройти модуль по аналитике', titleEn: 'Finish analytics course module', due: '2026-06-19', assignee: 'Артем', status: 'done', category: 'selfdev', priority: 'critical', urgent: true, important: true },
+          { id: 't5', titleRu: 'Согласовать договор с партнёром', titleEn: 'Approve partner contract', due: '2026-06-20', assignee: 'Алена', status: 'done', category: 'business', priority: 'high', urgent: true, important: true },
+          { id: 't6', titleRu: 'Аудит рекламных каналов', titleEn: 'Audit marketing channels', due: '2026-06-21', assignee: 'Артем', status: 'done', category: 'business', priority: 'low', urgent: false, important: false },
+          { id: 't7', titleRu: 'Проверить презентацию команды', titleEn: 'Review team presentation', due: '2026-06-22', assignee: 'Артем', status: 'done', category: 'work', priority: 'medium', urgent: true, important: false },
+          { id: 't8', titleRu: 'Продлить абонемент в зал', titleEn: 'Renew gym membership', due: '2026-06-23', assignee: 'Алена', status: 'done', category: 'health', priority: 'high', urgent: false, important: true },
+          { id: 't9', titleRu: 'Конспект книги по привычкам', titleEn: 'Summarize habits book', due: '2026-06-24', assignee: 'Оля', status: 'done', category: 'selfdev', priority: 'high', urgent: false, important: true },
+          { id: 't10', titleRu: 'Разобрать домашний архив', titleEn: 'Organize home documents', due: '2026-06-25', assignee: 'Артем', status: 'done', category: 'home', priority: 'critical', urgent: true, important: false },
+          // 4 Active Tasks (matching Screenshot 3 bottom rows & deadlines)
+          { id: 't11', titleRu: 'Синхронизация по проекту Q3', titleEn: 'Q3 Project Sync', due: '2026-11-24', assignee: 'Артем', status: 'waiting', category: 'work', priority: 'medium', urgent: true, important: true },
+          { id: 't12', titleRu: 'Запуск новой кампании', titleEn: 'Launch new business campaign', due: '2026-11-25', assignee: 'Артем', status: 'not_started', category: 'business', priority: 'high', urgent: false, important: true },
+          { id: 't13', titleRu: 'Практика разговорного английского', titleEn: 'English speaking practice', due: '2026-11-26', assignee: 'Егор', status: 'in_progress', category: 'selfdev', priority: 'medium', urgent: false, important: true },
+          { id: 't14', titleRu: 'Спланировать отпуск', titleEn: 'Plan upcoming vacation', due: '2026-11-27', assignee: 'Егор', status: 'waiting', category: 'personal', priority: 'high', urgent: true, important: false }
+        ],
+
+        // Finances matching Screenshots 5 & 6
+        incomes: [
+          { id: 'inc1', nameRu: 'Зарплата', nameEn: 'Salary', plan: 100000, actual: 115000 },
+          { id: 'inc2', nameRu: 'Бизнес', nameEn: 'Business', plan: 95000, actual: 105000 },
+          { id: 'inc3', nameRu: 'Подработка', nameEn: 'Side Hustle', plan: 30000, actual: 38000 },
+          { id: 'inc4', nameRu: 'Процент по вкладам', nameEn: 'Deposit Interest', plan: 6000, actual: 5800 }
+        ],
+        expenses: [
+          { id: 'exp1', nameRu: 'Путешествие', nameEn: 'Travel', plan: 10000, actual: 10000 },
+          { id: 'exp2', nameRu: 'Кредитка', nameEn: 'Credit Card', plan: 5000, actual: 5000 },
+          { id: 'exp3', nameRu: 'Личная жизнь', nameEn: 'Personal Life', plan: 5000, actual: 6500 },
+          { id: 'exp4', nameRu: 'Образование', nameEn: 'Education', plan: 5000, actual: 5000 },
+          { id: 'exp5', nameRu: 'Одежда', nameEn: 'Clothing', plan: 5000, actual: 4000 },
+          { id: 'exp6', nameRu: 'Домашние животные', nameEn: 'Pets', plan: 1900, actual: 3700 },
+          { id: 'exp7', nameRu: 'Подарки', nameEn: 'Gifts', plan: 5005, actual: 3000 },
+          { id: 'exp8', nameRu: 'Электричество', nameEn: 'Electricity', plan: 2500, actual: 2500 },
+          { id: 'exp9', nameRu: 'Здоровье', nameEn: 'Health', plan: 4500, actual: 1900 },
+          { id: 'exp10', nameRu: 'Саморазвитие', nameEn: 'Self-Development', plan: 2000, actual: 1500 },
+          { id: 'exp11', nameRu: 'Мобильная связь', nameEn: 'Mobile', plan: 1500, actual: 1400 },
+          { id: 'exp12', nameRu: 'Отопление', nameEn: 'Heating', plan: 1500, actual: 1200 },
+          { id: 'exp13', nameRu: 'Интернет', nameEn: 'Internet', plan: 1000, actual: 950 },
+          { id: 'exp14', nameRu: 'Транспорт', nameEn: 'Transport', plan: 2000, actual: 750 },
+          { id: 'exp15', nameRu: 'Еда', nameEn: 'Food', plan: 6000, actual: 104 },
+          { id: 'exp16', nameRu: 'Уход и красота', nameEn: 'Beauty & Care', plan: 5000, actual: 0 },
+          { id: 'exp17', nameRu: 'Домашние расходы', nameEn: 'Home Expenses', plan: 2300, actual: 0 }
+        ],
+        goals: [
+          { id: 'g1', nameRu: 'Путешествие', nameEn: 'Travel', saved: 65000, target: 120000 },
+          { id: 'g2', nameRu: 'Свадьба', nameEn: 'Wedding', saved: 180000, target: 500000 },
+          { id: 'g3', nameRu: 'Машина', nameEn: 'Car', saved: 420000, target: 1500000 },
+          { id: 'g4', nameRu: 'Акции', nameEn: 'Stocks', saved: 95000, target: 200000 },
+          { id: 'g5', nameRu: 'Криптовалюта', nameEn: 'Crypto', saved: 32000, target: 100000 },
+          { id: 'g6', nameRu: 'Доллары', nameEn: 'USD Reserve', saved: 75000, target: 150000 },
+          { id: 'g7', nameRu: 'Евро', nameEn: 'EUR Reserve', saved: 40000, target: 100000 }
+        ]
+      };
+    }
+
+    let state = loadState();
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) return JSON.parse(raw);
+      } catch (e) {
+        console.warn('Could not load saved state:', e);
+      }
+      return buildDemoState();
+    }
+
+    function saveState() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      } catch (e) {
+        console.warn('Could not save state:', e);
+      }
+    }
+
+    /* -----------------------------------------------------------------------
+     * 3. HELPER UTILITIES (Localization, Currency Formatting, Toasts, SVG)
+     * --------------------------------------------------------------------- */
+    function t(key) {
+      return (I18N[state.lang] && I18N[state.lang][key]) || I18N.en[key] || key;
+    }
+
+    function getLocalizedName(item) {
+      return state.lang === 'ru' ? (item.nameRu || item.nameEn || item.titleRu || item.titleEn || '') : (item.nameEn || item.nameRu || item.titleEn || item.titleRu || '');
+    }
+
+    function fmtMoney(val) {
+      const num = Number(val) || 0;
+      const formatted = num.toLocaleString(state.lang === 'ru' ? 'ru-RU' : 'en-US', {
+        minimumFractionDigits: state.currency === 'UZS' ? 0 : 2,
+        maximumFractionDigits: state.currency === 'UZS' ? 0 : 2
+      });
+      if (state.currency === '$' || state.currency === '€') return `${state.currency}${formatted}`;
+      return `${formatted} ${state.currency}`;
+    }
+
+    function fmtPct(val, decimals = 1) {
+      const n = Number(val) || 0;
+      const str = n.toFixed(decimals);
+      return state.lang === 'ru' ? str.replace('.', ',') + '%' : str + '%';
+    }
+
+    function showToast(message) {
+      const box = document.getElementById('toast-box');
+      const el = document.createElement('div');
+      el.className = 'bg-ink-800 text-white text-xs font-medium px-4 py-2.5 rounded-xl shadow-lg opacity-0 translate-y-2 transition-all duration-200';
+      el.textContent = message;
+      box.appendChild(el);
+      requestAnimationFrame(() => {
+        el.classList.remove('opacity-0', 'translate-y-2');
+      });
+      setTimeout(() => {
+        el.classList.add('opacity-0', 'translate-y-2');
+        setTimeout(() => el.remove(), 220);
+      }, 2200);
+    }
+
+    function escapeHtml(str) {
+      return String(str ?? '').replace(/[&<>"']/g, m => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
+    }
+
+    // Helper: Build crisp SVG Pie Chart from [{ label, value, color }]
+    function renderSvgPie(svgEl, items) {
+      const total = items.reduce((s, x) => s + Math.max(0, Number(x.value) || 0), 0);
+      if (total <= 0) {
+        svgEl.innerHTML = `<circle cx="90" cy="90" r="78" fill="#E6E3DB" />`;
+        return;
+      }
+      const cx = 90, cy = 90, r = 78;
+      let startAngle = -Math.PI / 2;
+      let paths = '';
+
+      items.forEach(item => {
+        const val = Math.max(0, Number(item.value) || 0);
+        if (val <= 0) return;
+        const frac = val / total;
+        if (frac >= 0.9999) {
+          paths += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${item.color}"><title>${escapeHtml(item.label)}: ${fmtPct(100)}</title></circle>`;
+          return;
+        }
+        const endAngle = startAngle + frac * Math.PI * 2;
+        const x1 = cx + r * Math.cos(startAngle);
+        const y1 = cy + r * Math.sin(startAngle);
+        const x2 = cx + r * Math.cos(endAngle);
+        const y2 = cy + r * Math.sin(endAngle);
+        const largeArc = frac > 0.5 ? 1 : 0;
+        const d = `M ${cx} ${cy} L ${x1.toFixed(2)} ${y1.toFixed(2)} A ${r} ${r} 0 ${largeArc} 1 ${x2.toFixed(2)} ${y2.toFixed(2)} Z`;
+        paths += `<path d="${d}" fill="${item.color}" stroke="#FAF9F6" stroke-width="1" class="hover:opacity-85 transition-opacity cursor-pointer"><title>${escapeHtml(item.label)}: ${fmtMoney(val)} (${fmtPct(frac * 100)})</title></path>`;
+        startAngle = endAngle;
+      });
+      svgEl.innerHTML = paths;
+    }
+
+    /* -----------------------------------------------------------------------
+     * 4. NAVIGATION, LANGUAGE & CURRENCY CONTROLS
+     * --------------------------------------------------------------------- */
+    function switchModule(mod) {
+      state.activeModule = mod;
+      saveState();
+
+      ['habits', 'tasks', 'finance'].forEach(m => {
+        const sec = document.getElementById('module-' + m);
+        const tab = document.getElementById('tab-' + m);
+        if (m === mod) {
+          sec.classList.remove('hidden');
+          tab.classList.add('bg-paper', 'text-ink-800', 'shadow-sm', 'border', 'border-[#D8D4CA]');
+          tab.classList.remove('text-ink-400', 'hover:text-ink-800');
+        } else {
+          sec.classList.add('hidden');
+          tab.classList.remove('bg-paper', 'text-ink-800', 'shadow-sm', 'border', 'border-[#D8D4CA]');
+          tab.classList.add('text-ink-400', 'hover:text-ink-800');
+        }
+      });
+
+      if (mod === 'habits') renderHabits();
+      if (mod === 'tasks') renderTasks();
+      if (mod === 'finance') renderFinance();
+    }
+
+    function setLanguage(lang) {
+      state.lang = lang;
+      saveState();
+      applyTranslations();
+      renderAll();
+    }
+
+    function setCurrency(curr) {
+      state.currency = curr;
+      saveState();
+      renderFinance();
+    }
+
+    function applyTranslations() {
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        el.textContent = t(key);
+      });
+
+      // Update language pill highlight
+      const ruBtn = document.getElementById('lang-ru');
+      const enBtn = document.getElementById('lang-en');
+      if (state.lang === 'ru') {
+        ruBtn.className = 'px-2.5 py-1.5 rounded-md bg-sage-500 text-white transition-colors';
+        enBtn.className = 'px-2.5 py-1.5 rounded-md text-ink-600 hover:text-ink-800 transition-colors';
+      } else {
+        enBtn.className = 'px-2.5 py-1.5 rounded-md bg-sage-500 text-white transition-colors';
+        ruBtn.className = 'px-2.5 py-1.5 rounded-md text-ink-600 hover:text-ink-800 transition-colors';
+      }
+
+      // Sync currency dropdown
+      document.getElementById('currency-select').value = state.currency;
+
+      // Populate month dropdown in active language
+      const mSel = document.getElementById('habit-month-select');
+      const months = t('months');
+      mSel.innerHTML = months.map((m, idx) => `<option value="${idx}" ${idx === state.habitMonth ? 'selected' : ''}>${m}</option>`).join('');
+      document.getElementById('habit-year-select').value = String(state.habitYear);
+    }
+
+    /* -----------------------------------------------------------------------
+     * 5. MODULE 1: HABIT ANALYTICS ENGINE
+     * --------------------------------------------------------------------- */
+    function getMonthKey() {
+      const m = String(state.habitMonth).padStart(2, '0');
+      return `${state.habitYear}-${m}`;
+    }
+
+    function getDaysInMonth(year, monthIdx) {
+      return new Date(year, monthIdx + 1, 0).getDate();
+    }
+
+    function changeHabitPeriod() {
+      state.habitMonth = parseInt(document.getElementById('habit-month-select').value, 10);
+      state.habitYear = parseInt(document.getElementById('habit-year-select').value, 10);
+      saveState();
+      renderHabits();
+    }
+
+    function toggleHabitCheck(habitId, day) {
+      const key = getMonthKey();
+      if (!state.habitChecks[key]) state.habitChecks[key] = {};
+      if (!state.habitChecks[key][habitId]) state.habitChecks[key][habitId] = {};
+      state.habitChecks[key][habitId][day] = !state.habitChecks[key][habitId][day];
+      saveState();
+      renderHabits();
+    }
+
+    function updateHabitName(habitId, newVal) {
+      const h = state.habits.find(x => x.id === habitId);
+      if (!h) return;
+      if (state.lang === 'ru') h.nameRu = newVal;
+      else h.nameEn = newVal;
+      saveState();
+      renderHabitsStatsOnly();
+    }
+
+    function updateHabitGoal(habitId, val) {
+      const h = state.habits.find(x => x.id === habitId);
+      if (!h) return;
+      const daysInMonth = getDaysInMonth(state.habitYear, state.habitMonth);
+      h.goal = Math.max(1, Math.min(daysInMonth, parseInt(val, 10) || daysInMonth));
+      saveState();
+      renderHabits();
+    }
+
+    function addHabit() {
+      const daysInMonth = getDaysInMonth(state.habitYear, state.habitMonth);
+      const id = 'h' + Date.now();
+      state.habits.push({
+        id,
+        nameRu: I18N.ru.newHabitPlaceholder,
+        nameEn: I18N.en.newHabitPlaceholder,
+        goal: daysInMonth
+      });
+      saveState();
+      renderHabits();
+    }
+
+    function deleteHabit(habitId) {
+      state.habits = state.habits.filter(h => h.id !== habitId);
+      saveState();
+      renderHabits();
+    }
+
+    function computeHabitStats() {
+      const key = getMonthKey();
+      const monthMap = state.habitChecks[key] || {};
+      const daysInMonth = getDaysInMonth(state.habitYear, state.habitMonth);
+      const totalHabits = state.habits.length;
+
+      let totalChecked = 0;
+      const totalPossible = totalHabits * daysInMonth;
+
+      // Per-day completion percentages
+      const dayStats = [];
+      let perfectDays = 0;
+      let bestDay = { day: 1, pct: 0 };
+
+      for (let d = 1; d <= daysInMonth; d++) {
+        let count = 0;
+        state.habits.forEach(h => {
+          if (monthMap[h.id] && monthMap[h.id][d]) count++;
+        });
+        const pct = totalHabits > 0 ? Math.round((count / totalHabits) * 100) : 0;
+        if (totalHabits > 0 && count === totalHabits) perfectDays++;
+        if (pct > bestDay.pct) bestDay = { day: d, pct };
+        dayStats.push({ day: d, count, pct });
+      }
+
+      // Per-habit stats & best streak
+      let maxStreak = 0;
+      const perHabit = state.habits.map((h, idx) => {
+        let count = 0;
+        let streak = 0;
+        let hMax = 0;
+        for (let d = 1; d <= daysInMonth; d++) {
+          if (monthMap[h.id] && monthMap[h.id][d]) {
+            count++;
+            streak++;
+            if (streak > hMax) hMax = streak;
+          } else {
+            streak = 0;
+          }
+        }
+        if (hMax > maxStreak) maxStreak = hMax;
+        totalChecked += count;
+        const goal = Math.min(h.goal || daysInMonth, daysInMonth);
+        const pct = goal > 0 ? Math.min(100, Math.round((count / goal) * 100)) : 0;
+        return { ...h, index: idx + 1, count, goal, pct, streak: hMax };
+      });
+
+      const overallPct = totalPossible > 0 ? (totalChecked / totalPossible) * 100 : 0;
+      return { daysInMonth, totalChecked, totalPossible, overallPct, dayStats, perHabit, perfectDays, bestDay, maxStreak };
+    }
+
+    function renderHabits() {
+      const stats = computeHabitStats();
+      const key = getMonthKey();
+      const monthMap = state.habitChecks[key] || {};
+      const months = t('months');
+      const weekdays = t('weekdays');
+
+      // 1. Big Month Header
+      document.getElementById('habit-month-title').textContent = months[state.habitMonth].toUpperCase();
+      document.getElementById('habit-count-badge').textContent = state.habits.length;
+
+      // 2. Daily Vertical Bar Chart (Screenshot 2 Top)
+      const barsHtml = `
+        <div class="flex items-end justify-between gap-1 min-w-[540px] h-36 pt-4 px-1">
+          ${stats.dayStats.map(ds => {
+            const isPerfect = ds.pct === 100;
+            const barColor = isPerfect ? 'bg-sage-500' : 'bg-clay-400';
+            const heightPx = Math.max(2, Math.round((ds.pct / 100) * 96));
+            return `
+              <div class="flex flex-col items-center flex-1 group">
+                <div class="w-full max-w-[16px] flex items-end justify-center h-24">
+                  <div class="${barColor} w-full rounded-t-sm bar-fill group-hover:opacity-80"
+                    style="height: ${ds.pct > 0 ? heightPx : 2}px; opacity: ${ds.pct > 0 ? 1 : 0.25}"
+                    title="${months[state.habitMonth]} ${ds.day}: ${ds.pct}% (${ds.count}/${state.habits.length})">
+                  </div>
+                </div>
+                <span class="text-[9px] font-semibold mt-1.5 ${isPerfect ? 'text-sage-700' : 'text-clay-700'}">${ds.pct}%</span>
+                <span class="text-[9px] text-ink-400">${ds.day}</span>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+      document.getElementById('habit-daily-bars').innerHTML = barsHtml;
+
+      // 3. Matrix Table Header (Grouped into Week 1 .. Week 5 like Screenshot 2)
+      const weeks = [];
+      let wStart = 1;
+      let wNum = 1;
+      while (wStart <= stats.daysInMonth) {
+        const wEnd = Math.min(wStart + 6, stats.daysInMonth);
+        weeks.push({ num: wNum++, start: wStart, end: wEnd, span: wEnd - wStart + 1 });
+        wStart = wEnd + 1;
+      }
+
+      let thead = `
+        <thead>
+          <tr>
+            <th rowspan="3" class="sticky left-0 z-20 bg-sage-100 text-ink-800 border-b border-r border-[#D0CCC2] px-3 py-2 text-left uppercase tracking-wider text-[11px] min-w-[205px] sticky-col-shadow">
+              ${t('habitCol')}
+            </th>
+            ${weeks.map((w, i) => `
+              <th colspan="${w.span}" class="py-1.5 px-1 text-center text-[10px] font-bold uppercase tracking-widest text-white border-b border-r border-[#C8B2A3] ${i % 2 === 0 ? 'bg-clay-400' : 'bg-clay-500'}">
+                ${t('weekPrefix')} ${w.num}
+              </th>
+            `).join('')}
+          </tr>
+          <tr class="bg-clay-100/80 text-ink-800 text-[10px]">
+            ${Array.from({ length: stats.daysInMonth }, (_, i) => {
+              const d = i + 1;
+              const dow = new Date(state.habitYear, state.habitMonth, d).getDay();
+              const isWknd = dow === 0 || dow === 6;
+              return `<th class="py-1 px-1 text-center font-semibold border-r border-[#E2DDD4] ${isWknd ? 'text-clay-700' : ''}">${weekdays[dow]}</th>`;
+            }).join('')}
+          </tr>
+          <tr class="bg-linen text-ink-600 text-[10px] border-b border-[#D0CCC2]">
+            ${Array.from({ length: stats.daysInMonth }, (_, i) => {
+              const d = i + 1;
+              return `<th class="py-1 px-1 text-center font-medium border-r border-[#E2DDD4]">${d}</th>`;
+            }).join('')}
+          </tr>
+        </thead>
+      `;
+
+      // Matrix Body Rows
+      let tbody = `<tbody class="divide-y divide-[#E7E4DC] bg-paper">`;
+      state.habits.forEach((h, idx) => {
+        const hMap = monthMap[h.id] || {};
+        const label = getLocalizedName(h);
+        tbody += `
+          <tr class="hover:bg-linen/50 transition-colors">
+            <td class="sticky left-0 z-10 bg-paper border-r border-[#D8D4CA] px-2.5 py-1.5 sticky-col-shadow">
+              <div class="flex items-center gap-1.5 group">
+                <span class="text-[11px] font-bold text-ink-400 w-5 text-right flex-shrink-0">${idx + 1}</span>
+                <input type="text" value="${escapeHtml(label)}"
+                  onchange="updateHabitName('${h.id}', this.value)"
+                  class="w-full bg-transparent text-xs text-ink-800 font-medium px-1 py-0.5 rounded focus:outline-none focus:bg-linen focus:ring-1 focus:ring-sage-400" />
+                <button onclick="deleteHabit('${h.id}')" title="Delete"
+                  class="opacity-0 group-hover:opacity-100 text-ink-400 hover:text-clay-700 px-1 text-sm transition-opacity">&times;</button>
+              </div>
+            </td>
+            ${Array.from({ length: stats.daysInMonth }, (_, i) => {
+              const d = i + 1;
+              const checked = !!hMap[d];
+              return `
+                <td class="p-1 text-center border-r border-[#EFECE5]">
+                  <input type="checkbox" class="habit-box" ${checked ? 'checked' : ''}
+                    onchange="toggleHabitCheck('${h.id}', ${d})" />
+                </td>
+              `;
+            }).join('')}
+          </tr>
+        `;
+      });
+      tbody += `</tbody>`;
+      document.getElementById('habit-matrix-table').innerHTML = thead + tbody;
+
+      renderHabitsStatsOnly(stats);
+    }
+
+    function renderHabitsStatsOnly(precomputed) {
+      const stats = precomputed || computeHabitStats();
+      const circ = 289.03; // 2 * PI * 46
+      const offset = circ * (1 - stats.overallPct / 100);
+
+      // Update Top-Right Donut & Bottom-Left Summary Donut
+      document.getElementById('habit-total-pct').textContent = fmtPct(stats.overallPct);
+      document.getElementById('habit-total-sub').textContent = `${stats.totalChecked} / ${stats.totalPossible}`;
+      document.getElementById('habit-donut-fraction').textContent = `${stats.totalChecked}/${stats.totalPossible}`;
+      document.getElementById('habit-main-donut').setAttribute('stroke-dashoffset', offset.toFixed(2));
+      document.getElementById('habit-progress-header-ratio').textContent = `${stats.totalChecked} / ${stats.totalPossible}`;
+
+      document.getElementById('summary-pct').textContent = fmtPct(stats.overallPct);
+      document.getElementById('summary-ratio').textContent = `${stats.totalChecked} / ${stats.totalPossible}`;
+      document.getElementById('summary-donut').setAttribute('stroke-dashoffset', offset.toFixed(2));
+      document.getElementById('summary-best-day').textContent = `${t('bestDayPrefix')} ${t('months')[state.habitMonth]} ${stats.bestDay.day} (${stats.bestDay.pct}%)`;
+
+      // Right Progress Table (Screenshot 4 Middle)
+      document.getElementById('habit-progress-tbody').innerHTML = stats.perHabit.map(h => {
+        const barColor = h.pct >= 100 ? 'bg-sage-500' : 'bg-clay-400';
+        return `
+          <tr class="hover:bg-linen/40">
+            <td class="py-1.5 px-2 text-ink-400 font-semibold">${h.index}</td>
+            <td class="py-1 px-1.5 text-center">
+              <input type="number" min="1" max="${stats.daysInMonth}" value="${h.goal}"
+                onchange="updateHabitGoal('${h.id}', this.value)"
+                class="w-11 text-center bg-linen/70 border border-transparent hover:border-[#D5D1C7] focus:border-sage-500 rounded py-0.5 text-xs focus:outline-none" />
+            </td>
+            <td class="py-1.5 px-2">
+              <div class="flex items-center gap-2">
+                <span class="w-9 text-right font-semibold text-ink-800">${h.pct}%</span>
+                <div class="flex-1 h-4 bg-linen rounded-sm overflow-hidden">
+                  <div class="${barColor} h-full bar-fill" style="width: ${h.pct}%"></div>
+                </div>
+              </div>
+            </td>
+            <td class="py-1.5 px-2 text-right font-medium text-ink-600 whitespace-nowrap">${h.count} / ${h.goal}</td>
+          </tr>
+        `;
+      }).join('');
+
+      // Daily Summary Metrics Table
+      document.getElementById('habit-metrics-tbody').innerHTML = `
+        <tr><td class="py-2.5 px-4 text-ink-600">${t('mCompletedChecks')}</td><td class="py-2.5 px-4 text-right font-bold">${stats.totalChecked}</td></tr>
+        <tr><td class="py-2.5 px-4 text-ink-600">${t('mPerfectDays')}</td><td class="py-2.5 px-4 text-right font-bold text-sage-700">${stats.perfectDays}</td></tr>
+        <tr><td class="py-2.5 px-4 text-ink-600">${t('mBestStreak')}</td><td class="py-2.5 px-4 text-right font-bold text-clay-700">${stats.maxStreak} d</td></tr>
+        <tr><td class="py-2.5 px-4 text-ink-600">${t('mActiveHabits')}</td><td class="py-2.5 px-4 text-right font-bold">${state.habits.length}</td></tr>
+      `;
+
+      // Top-10 Most Consistent Habits (Auto-sorted)
+      const top10 = [...stats.perHabit].sort((a, b) => b.pct - a.pct || b.count - a.count).slice(0, 10);
+      document.getElementById('habit-top10-tbody').innerHTML = top10.map((h, i) => `
+        <tr class="hover:bg-linen/50">
+          <td class="py-2 px-4 font-bold text-ink-400">${i + 1}</td>
+          <td class="py-2 px-4 font-medium text-ink-800">${escapeHtml(getLocalizedName(h))}</td>
+          <td class="py-2 px-4 hidden sm:table-cell">
+            <div class="w-full h-2.5 bg-linen rounded-full overflow-hidden">
+              <div class="${h.pct >= 100 ? 'bg-sage-500' : 'bg-clay-400'} h-full rounded-full bar-fill" style="width:${h.pct}%"></div>
+            </div>
+          </td>
+          <td class="py-2 px-4 text-right font-bold ${h.pct >= 100 ? 'text-sage-700' : 'text-clay-700'}">${h.pct}%</td>
+        </tr>
+      `).join('');
+    }
+
+    /* -----------------------------------------------------------------------
+     * 6. MODULE 2: TASK TRACKER ENGINE (Table, Kanban, Eisenhower Matrix)
+     * --------------------------------------------------------------------- */
+    const STATUS_META = {
+      done:        { color: '#C59F8A', badge: 'bg-sage-100 text-sage-700', icon: '✓', key: 'stDone' },
+      waiting:     { color: '#78967B', badge: 'bg-amber-50 text-amber-800 border border-amber-200/70', icon: '⏳', key: 'stWaiting' },
+      not_started: { color: '#9A5D47', badge: 'bg-linen text-ink-600 border border-[#D8D4CA]', icon: '○', key: 'stNotStarted' },
+      in_progress: { color: '#C9D6C9', badge: 'bg-clay-100 text-clay-700', icon: '⚒', key: 'stInProgress' }
+    };
+
+    const PRIORITY_META = {
+      critical: { dot: 'bg-red-700', text: 'text-red-800', key: 'prCritical' },
+      high:     { dot: 'bg-red-500', text: 'text-clay-700', key: 'prHigh' },
+      medium:   { dot: 'bg-amber-400', text: 'text-amber-800', key: 'prMedium' },
+      low:      { dot: 'bg-emerald-500', text: 'text-sage-700', key: 'prLow' }
+    };
+
+    const CATEGORY_META = {
+      work:     { icon: '💼', key: 'catWork' },
+      business: { icon: '📈', key: 'catBusiness' },
+      selfdev:  { icon: '📚', key: 'catSelfdev' },
+      personal: { icon: '✨', key: 'catPersonal' },
+      health:   { icon: '💪', key: 'catHealth' },
+      home:     { icon: '🏡', key: 'catHome' }
+    };
+
+    function getAvatarBadge(name) {
+      const colors = ['bg-sage-500', 'bg-clay-500', 'bg-sage-700', 'bg-clay-600'];
+      const hash = [...(name || 'A')].reduce((a, c) => a + c.charCodeAt(0), 0);
+      const bg = colors[hash % colors.length];
+      const letter = (name || '?').trim().charAt(0).toUpperCase();
+      return `<span class="inline-flex items-center justify-center w-5 h-5 rounded-full ${bg} text-white text-[10px] font-bold mr-1.5 flex-shrink-0">${escapeHtml(letter)}</span>`;
+    }
+
+    function setTaskView(view) {
+      state.taskView = view;
+      saveState();
+      renderTasks();
+    }
+
+    function updateTaskField(taskId, field, value) {
+      const task = state.tasks.find(x => x.id === taskId);
+      if (!task) return;
+      task[field] = value;
+      saveState();
+      renderTasks();
+    }
+
+    function deleteTask(taskId) {
+      state.tasks = state.tasks.filter(x => x.id !== taskId);
+      saveState();
+      renderTasks();
+    }
+
+    function openTaskModal(taskId = null) {
+      const modal = document.getElementById('task-modal');
+      modal.classList.remove('hidden');
+      if (taskId) {
+        const tk = state.tasks.find(x => x.id === taskId);
+        if (!tk) return;
+        document.getElementById('tf-id').value = tk.id;
+        document.getElementById('tf-title').value = getLocalizedName(tk);
+        document.getElementById('tf-due').value = tk.due;
+        document.getElementById('tf-assignee').value = tk.assignee;
+        document.getElementById('tf-status').value = tk.status;
+        document.getElementById('tf-priority').value = tk.priority;
+        document.getElementById('tf-category').value = tk.category;
+        document.getElementById('tf-urgent').checked = !!tk.urgent;
+        document.getElementById('tf-important').checked = !!tk.important;
+      } else {
+        document.getElementById('task-form').reset();
+        document.getElementById('tf-id').value = '';
+        document.getElementById('tf-due').value = new Date(Date.now() + 3 * 86400000).toISOString().slice(0, 10);
+        document.getElementById('tf-assignee').value = state.lang === 'ru' ? 'Артем' : 'Artem';
+        document.getElementById('tf-status').value = 'not_started';
+        document.getElementById('tf-priority').value = 'medium';
+        document.getElementById('tf-important').checked = true;
+      }
+    }
+
+    function closeTaskModal() {
+      document.getElementById('task-modal').classList.add('hidden');
+    }
+
+    function saveTaskForm(e) {
+      e.preventDefault();
+      const id = document.getElementById('tf-id').value;
+      const title = document.getElementById('tf-title').value.trim();
+      const due = document.getElementById('tf-due').value;
+      const assignee = document.getElementById('tf-assignee').value.trim() || 'Team';
+      const status = document.getElementById('tf-status').value;
+      const priority = document.getElementById('tf-priority').value;
+      const category = document.getElementById('tf-category').value;
+      const urgent = document.getElementById('tf-urgent').checked;
+      const important = document.getElementById('tf-important').checked;
+
+      if (id) {
+        const tk = state.tasks.find(x => x.id === id);
+        if (tk) {
+          if (state.lang === 'ru') tk.titleRu = title;
+          else tk.titleEn = title;
+          Object.assign(tk, { due, assignee, status, priority, category, urgent, important });
+        }
+      } else {
+        state.tasks.push({
+          id: 't' + Date.now(),
+          titleRu: title,
+          titleEn: title,
+          due, assignee, status, priority, category, urgent, important
+        });
+      }
+      saveState();
+      closeTaskModal();
+      renderTasks();
+      showToast(t('toastSaved'));
+    }
+
+    function renderTasks() {
+      const todayStr = new Date().toISOString().slice(0, 10);
+      const in7Str = new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10);
+
+      // KPIs
+      const total = state.tasks.length;
+      const done = state.tasks.filter(x => x.status === 'done').length;
+      const active = total - done;
+      const overdue = state.tasks.filter(x => x.status !== 'done' && x.due < todayStr).length;
+      const soon = state.tasks.filter(x => x.status !== 'done' && x.due >= todayStr && x.due <= in7Str).length;
+      const pct = total > 0 ? (done / total) * 100 : 0;
+
+      document.getElementById('kpi-total').textContent = total;
+      document.getElementById('kpi-active').textContent = active;
+      document.getElementById('kpi-done').textContent = done;
+      document.getElementById('kpi-overdue').textContent = overdue;
+      document.getElementById('kpi-soon').textContent = soon;
+
+      // Progress Donut
+      const circ = 339.29; // 2 * PI * 54
+      document.getElementById('task-progress-pct').textContent = fmtPct(pct);
+      document.getElementById('task-progress-donut').setAttribute('stroke-dashoffset', (circ * (1 - pct / 100)).toFixed(2));
+
+      // Status Breakdown Multi-Segment Donut (Screenshot 3 Middle-Right)
+      const statusKeys = ['done', 'waiting', 'not_started', 'in_progress'];
+      const statusCounts = statusKeys.map(k => ({
+        key: k,
+        count: state.tasks.filter(x => x.status === k).length,
+        meta: STATUS_META[k]
+      }));
+
+      let svgCircles = `<circle cx="70" cy="70" r="54" fill="none" stroke="#E4E2DC" stroke-width="18" />`;
+      let acc = 0;
+      if (total > 0) {
+        statusCounts.forEach(s => {
+          if (s.count <= 0) return;
+          const segLen = (s.count / total) * circ;
+          svgCircles += `<circle cx="70" cy="70" r="54" fill="none" stroke="${s.meta.color}" stroke-width="18"
+            stroke-dasharray="${segLen.toFixed(2)} ${circ.toFixed(2)}" stroke-dashoffset="${(-acc).toFixed(2)}">
+            <title>${t(s.meta.key)}: ${s.count}</title></circle>`;
+          acc += segLen;
+        });
+      }
+      document.getElementById('task-status-svg').innerHTML = svgCircles;
+
+      document.getElementById('task-status-legend').innerHTML = statusCounts.map(s => `
+        <div class="flex items-center justify-between gap-1.5">
+          <span class="flex items-center gap-1.5 truncate text-ink-600">
+            <span class="w-2.5 h-2.5 rounded-full flex-shrink-0" style="background:${s.meta.color}"></span>
+            <span class="truncate">${t(s.meta.key)}</span>
+          </span>
+          <span class="font-bold text-ink-800">${s.count}</span>
+        </div>
+      `).join('');
+
+      // Upcoming Deadlines
+      const upcoming = state.tasks.filter(x => x.status !== 'done').sort((a, b) => a.due.localeCompare(b.due)).slice(0, 5);
+      document.getElementById('deadlines-tbody').innerHTML = upcoming.length
+        ? upcoming.map(tk => `
+          <tr class="hover:bg-linen/50 cursor-pointer" onclick="openTaskModal('${tk.id}')">
+            <td class="py-2 pr-2 font-medium text-ink-800 truncate max-w-[140px]">${escapeHtml(getLocalizedName(tk))}</td>
+            <td class="py-2 pr-2 whitespace-nowrap ${tk.due < todayStr ? 'text-red-700 font-semibold' : 'text-ink-600'}">${tk.due}</td>
+            <td class="py-2 whitespace-nowrap flex items-center">${getAvatarBadge(tk.assignee)}<span>${escapeHtml(tk.assignee)}</span></td>
+          </tr>
+        `).join('')
+        : `<tr><td colspan="3" class="py-6 text-center text-ink-400">${t('noDeadlines')}</td></tr>`;
+
+      // Update Sub-view Tab Styling
+      ['table', 'kanban', 'matrix'].forEach(v => {
+        const btn = document.getElementById('tview-' + v);
+        const cont = document.getElementById('task-container-' + v);
+        if (v === state.taskView) {
+          btn.classList.add('bg-paper', 'text-ink-800', 'shadow-xs', 'border', 'border-[#D8D4CA]');
+          btn.classList.remove('text-ink-400');
+          cont.classList.remove('hidden');
+        } else {
+          btn.classList.remove('bg-paper', 'text-ink-800', 'shadow-xs', 'border', 'border-[#D8D4CA]');
+          btn.classList.add('text-ink-400');
+          cont.classList.add('hidden');
+        }
+      });
+
+      // Apply Search & Status Filter
+      const q = (document.getElementById('task-search').value || '').toLowerCase();
+      const stFilter = document.getElementById('task-filter-status').value;
+      const filtered = state.tasks.filter(tk => {
+        const matchQ = !q || getLocalizedName(tk).toLowerCase().includes(q) || tk.assignee.toLowerCase().includes(q);
+        const matchSt = stFilter === 'all' || tk.status === stFilter;
+        return matchQ && matchSt;
+      });
+
+      // Render active sub-view
+      if (state.taskView === 'table') renderTaskTable(filtered);
+      if (state.taskView === 'kanban') renderTaskKanban(filtered);
+      if (state.taskView === 'matrix') renderTaskMatrix(filtered);
+    }
+
+    function renderTaskTable(list) {
+      document.getElementById('task-table-tbody').innerHTML = list.map(tk => {
+        const isDone = tk.status === 'done';
+        const pr = PRIORITY_META[tk.priority] || PRIORITY_META.medium;
+        const cat = CATEGORY_META[tk.category] || CATEGORY_META.work;
+
+        return `
+          <tr class="hover:bg-linen/50 transition-colors ${isDone ? 'opacity-75' : ''}">
+            <td class="py-2.5 px-3 font-medium text-ink-800 cursor-pointer hover:text-sage-700" onclick="openTaskModal('${tk.id}')">
+              <span class="${isDone ? 'line-through text-ink-400' : ''}">${escapeHtml(getLocalizedName(tk))}</span>
+            </td>
+            <td class="py-2.5 px-3 whitespace-nowrap text-ink-600">${tk.due}</td>
+            <td class="py-2.5 px-3 whitespace-nowrap">
+              <div class="flex items-center">${getAvatarBadge(tk.assignee)}<span>${escapeHtml(tk.assignee)}</span></div>
+            </td>
+            <td class="py-2.5 px-3 whitespace-nowrap">
+              <select onchange="updateTaskField('${tk.id}', 'status', this.value)"
+                class="rounded-lg px-2 py-1 text-[11px] font-medium cursor-pointer focus:outline-none ${STATUS_META[tk.status].badge}">
+                ${Object.entries(STATUS_META).map(([k, m]) => `<option value="${k}" ${tk.status === k ? 'selected' : ''}>${m.icon} ${t(m.key)}</option>`).join('')}
+              </select>
+            </td>
+            <td class="py-2.5 px-3 whitespace-nowrap text-ink-600">
+              <span class="mr-1">${cat.icon}</span> ${t(cat.key)}
+            </td>
+            <td class="py-2.5 px-3 whitespace-nowrap">
+              <span class="inline-flex items-center gap-1.5 font-medium ${pr.text}">
+                <span class="w-2.5 h-2.5 rounded-full ${pr.dot}"></span>
+                ${t(pr.key)}
+              </span>
+            </td>
+            <td class="py-2.5 px-3 text-center">
+              <input type="checkbox" class="habit-box" ${tk.urgent ? 'checked' : ''} onchange="updateTaskField('${tk.id}', 'urgent', this.checked)" />
+            </td>
+            <td class="py-2.5 px-3 text-center">
+              <input type="checkbox" class="habit-box" ${tk.important ? 'checked' : ''} onchange="updateTaskField('${tk.id}', 'important', this.checked)" />
+            </td>
+            <td class="py-2.5 px-3 text-right whitespace-nowrap">
+              <button onclick="openTaskModal('${tk.id}')" class="text-ink-400 hover:text-sage-600 mr-2" title="Edit">✎</button>
+              <button onclick="deleteTask('${tk.id}')" class="text-ink-400 hover:text-red-700" title="Delete">&times;</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function renderTaskKanban(list) {
+      const cols = ['not_started', 'in_progress', 'waiting', 'done'];
+      document.getElementById('task-container-kanban').innerHTML = cols.map(st => {
+        const items = list.filter(x => x.status === st);
+        const meta = STATUS_META[st];
+        return `
+          <div class="sheet-card flex flex-col overflow-hidden">
+            <div class="px-4 py-2.5 flex items-center justify-between border-b border-[#D8D4CA]" style="background:${meta.color}30">
+              <span class="text-xs font-bold uppercase tracking-wider text-ink-800">${meta.icon} ${t(meta.key)}</span>
+              <span class="text-[11px] font-bold bg-paper px-2 py-0.5 rounded-full text-ink-600">${items.length}</span>
+            </div>
+            <div class="p-3 space-y-2.5 flex-1 bg-linen/30 min-h-[220px]">
+              ${items.map(tk => {
+                const pr = PRIORITY_META[tk.priority] || PRIORITY_META.medium;
+                const cat = CATEGORY_META[tk.category] || CATEGORY_META.work;
+                return `
+                  <div class="bg-paper border border-[#DDD9D0] rounded-xl p-3 shadow-xs hover:border-sage-400 transition-colors">
+                    <div class="flex items-start justify-between gap-2">
+                      <p class="text-xs font-semibold text-ink-800 cursor-pointer hover:text-sage-700" onclick="openTaskModal('${tk.id}')">
+                        ${escapeHtml(getLocalizedName(tk))}
+                      </p>
+                      <span class="w-2.5 h-2.5 rounded-full flex-shrink-0 mt-0.5 ${pr.dot}" title="${t(pr.key)}"></span>
+                    </div>
+                    <div class="flex items-center justify-between text-[11px] text-ink-400 mt-2.5">
+                      <span>${cat.icon} ${tk.due}</span>
+                      <span class="flex items-center text-ink-600">${getAvatarBadge(tk.assignee)}${escapeHtml(tk.assignee)}</span>
+                    </div>
+                    <div class="mt-2.5 pt-2 border-t border-[#EFECE5] flex justify-end">
+                      <select onchange="updateTaskField('${tk.id}', 'status', this.value)"
+                        class="text-[10px] bg-linen border border-[#D8D4CA] rounded px-2 py-0.5 text-ink-600 cursor-pointer">
+                        ${cols.map(c => `<option value="${c}" ${c === st ? 'selected' : ''}>→ ${t(STATUS_META[c].key)}</option>`).join('')}
+                      </select>
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderTaskMatrix(list) {
+      const quads = [
+        { key: 'q1Title', headerBg: 'bg-clay-500 text-white', items: list.filter(x => x.urgent && x.important) },
+        { key: 'q2Title', headerBg: 'bg-sage-500 text-white', items: list.filter(x => !x.urgent && x.important) },
+        { key: 'q3Title', headerBg: 'bg-clay-200 text-ink-800', items: list.filter(x => x.urgent && !x.important) },
+        { key: 'q4Title', headerBg: 'bg-linen text-ink-600 border-b border-[#D8D4CA]', items: list.filter(x => !x.urgent && !x.important) }
+      ];
+
+      document.getElementById('task-container-matrix').innerHTML = quads.map(q => `
+        <div class="sheet-card overflow-hidden flex flex-col">
+          <div class="px-4 py-2.5 flex items-center justify-between ${q.headerBg}">
+            <h4 class="text-xs font-bold uppercase tracking-wider">${t(q.key)}</h4>
+            <span class="text-[11px] font-bold bg-white/25 px-2 py-0.5 rounded-full">${q.items.length}</span>
+          </div>
+          <div class="p-3 space-y-2 min-h-[170px] bg-paper">
+            ${q.items.map(tk => `
+              <div class="flex items-center justify-between gap-2 p-2.5 rounded-lg bg-linen/60 border border-[#E5E2D9] text-xs">
+                <div class="flex items-center gap-2 min-w-0">
+                  <input type="checkbox" class="habit-box flex-shrink-0" ${tk.status === 'done' ? 'checked' : ''}
+                    onchange="updateTaskField('${tk.id}', 'status', this.checked ? 'done' : 'in_progress')" />
+                  <span onclick="openTaskModal('${tk.id}')" class="truncate cursor-pointer font-medium ${tk.status === 'done' ? 'line-through text-ink-400' : 'text-ink-800'}">
+                    ${escapeHtml(getLocalizedName(tk))}
+                  </span>
+                </div>
+                <span class="text-[11px] text-ink-400 whitespace-nowrap">${tk.due}</span>
+              </div>
+            `).join('') || `<p class="text-xs text-ink-400 text-center py-8">—</p>`}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    /* -----------------------------------------------------------------------
+     * 7. MODULE 3: PERSONAL FINANCE & GOALS ENGINE
+     * --------------------------------------------------------------------- */
+    const EDITORIAL_PALETTE = [
+      '#516E56', '#B98E76', '#8DA590', '#D4B9A9', '#6B8A70',
+      '#A16F58', '#C6D4C7', '#E1CFC4', '#3E5743', '#C9A48F',
+      '#7C9780', '#8F5B46'
+    ];
+
+    function updateFinanceRow(type, id, field, value) {
+      const arr = type === 'income' ? state.incomes : state.expenses;
+      const item = arr.find(x => x.id === id);
+      if (!item) return;
+      if (field === 'name') {
+        if (state.lang === 'ru') item.nameRu = value;
+        else item.nameEn = value;
+      } else {
+        item[field] = Math.max(0, parseFloat(value) || 0);
+      }
+      saveState();
+      renderFinance();
+    }
+
+    function addFinanceRow(type) {
+      const arr = type === 'income' ? state.incomes : state.expenses;
+      arr.push({
+        id: type + Date.now(),
+        nameRu: I18N.ru.newCategoryPlaceholder,
+        nameEn: I18N.en.newCategoryPlaceholder,
+        plan: 0,
+        actual: 0
+      });
+      saveState();
+      renderFinance();
+    }
+
+    function deleteFinanceRow(type, id) {
+      if (type === 'income') state.incomes = state.incomes.filter(x => x.id !== id);
+      else state.expenses = state.expenses.filter(x => x.id !== id);
+      saveState();
+      renderFinance();
+    }
+
+    function updateGoalRow(id, field, value) {
+      const g = state.goals.find(x => x.id === id);
+      if (!g) return;
+      if (field === 'name') {
+        if (state.lang === 'ru') g.nameRu = value;
+        else g.nameEn = value;
+      } else {
+        g[field] = Math.max(0, parseFloat(value) || 0);
+      }
+      saveState();
+      renderFinance();
+    }
+
+    function addGoalRow() {
+      state.goals.push({
+        id: 'g' + Date.now(),
+        nameRu: I18N.ru.newGoalPlaceholder,
+        nameEn: I18N.en.newGoalPlaceholder,
+        saved: 0,
+        target: 50000
+      });
+      saveState();
+      renderFinance();
+    }
+
+    function deleteGoalRow(id) {
+      state.goals = state.goals.filter(x => x.id !== id);
+      saveState();
+      renderFinance();
+    }
+
+    function renderFinance() {
+      const incPlan = state.incomes.reduce((s, x) => s + (Number(x.plan) || 0), 0);
+      const incActual = state.incomes.reduce((s, x) => s + (Number(x.actual) || 0), 0);
+      const expPlan = state.expenses.reduce((s, x) => s + (Number(x.plan) || 0), 0);
+      const expActual = state.expenses.reduce((s, x) => s + (Number(x.actual) || 0), 0);
+      const remaining = incActual - expActual;
+      const savingsRate = incActual > 0 ? Math.max(0, (remaining / incActual) * 100) : 0;
+
+      // Top Left Card: Remaining Balance & Cashflow Bars
+      document.getElementById('fin-remaining-amount').textContent = fmtMoney(remaining);
+      const statusBadge = document.getElementById('fin-status-badge');
+      if (remaining >= 0) {
+        statusBadge.textContent = t('onTrack');
+        statusBadge.className = 'inline-block mt-3 text-[11px] uppercase tracking-[0.2em] font-semibold px-3 py-1 rounded-full bg-sage-100 text-sage-700';
+      } else {
+        statusBadge.textContent = t('overBudget');
+        statusBadge.className = 'inline-block mt-3 text-[11px] uppercase tracking-[0.2em] font-semibold px-3 py-1 rounded-full bg-red-100 text-red-700';
+      }
+
+      document.getElementById('fin-total-income').textContent = fmtMoney(incActual);
+      document.getElementById('fin-total-expense').textContent = fmtMoney(expActual);
+      document.getElementById('fin-savings-rate').textContent = fmtPct(savingsRate);
+
+      const maxFlow = Math.max(incActual, expActual, 1);
+      document.getElementById('fin-income-bar').style.width = `${(incActual / maxFlow) * 100}%`;
+      document.getElementById('fin-expense-bar').style.width = `${(expActual / maxFlow) * 100}%`;
+
+      // Pie 1: Income Structure (Screenshot 5 Top)
+      const incPieItems = state.incomes.map((x, i) => ({
+        label: getLocalizedName(x),
+        value: x.actual,
+        color: EDITORIAL_PALETTE[i % EDITORIAL_PALETTE.length]
+      }));
+      renderSvgPie(document.getElementById('fin-income-pie'), incPieItems);
+      document.getElementById('fin-income-legend').innerHTML = incPieItems.filter(x => x.value > 0).map(item => `
+        <div class="flex items-center gap-2">
+          <span class="w-2.5 h-2.5 rounded-full flex-shrink-0" style="background:${item.color}"></span>
+          <span class="text-ink-600 truncate max-w-[130px]">${escapeHtml(item.label)}</span>
+        </div>
+      `).join('');
+
+      // Pie 2: Where the Money Went (Screenshot 6 Middle)
+      const sortedExp = [...state.expenses].filter(x => x.actual > 0).sort((a, b) => b.actual - a.actual);
+      const expPieItems = sortedExp.map((x, i) => ({
+        label: getLocalizedName(x),
+        value: x.actual,
+        color: EDITORIAL_PALETTE[i % EDITORIAL_PALETTE.length]
+      }));
+      renderSvgPie(document.getElementById('fin-expense-pie'), expPieItems);
+      const visibleLegend = expPieItems.slice(0, 8);
+      const hiddenCount = Math.max(0, expPieItems.length - 8);
+      document.getElementById('fin-expense-legend').innerHTML = visibleLegend.map(item => `
+        <div class="flex items-center gap-2">
+          <span class="w-2.5 h-2.5 rounded-full flex-shrink-0" style="background:${item.color}"></span>
+          <span class="text-ink-600 truncate max-w-[130px]">${escapeHtml(item.label)}</span>
+        </div>
+      `).join('') + (hiddenCount > 0 ? `<p class="text-[11px] text-ink-400 pl-4">+ ${t('andMore')} ${hiddenCount}</p>` : '');
+
+      // Income Summary Table
+      document.getElementById('fin-income-tbody').innerHTML = state.incomes.map(row => {
+        const pct = row.plan > 0 ? (row.actual / row.plan) * 100 : (row.actual > 0 ? 100 : 0);
+        return `
+          <tr class="hover:bg-linen/50 group">
+            <td class="py-1.5 px-3">
+              <input type="text" value="${escapeHtml(getLocalizedName(row))}"
+                onchange="updateFinanceRow('income','${row.id}','name',this.value)"
+                class="w-full bg-transparent text-ink-800 font-medium focus:outline-none focus:bg-linen rounded px-1 py-0.5" />
+            </td>
+            <td class="py-1.5 px-2 text-right">
+              <input type="number" min="0" step="100" value="${row.plan}"
+                onchange="updateFinanceRow('income','${row.id}','plan',this.value)"
+                class="w-20 text-right bg-transparent hover:bg-linen focus:bg-linen rounded px-1 py-0.5 focus:outline-none" />
+            </td>
+            <td class="py-1.5 px-2 text-right">
+              <input type="number" min="0" step="100" value="${row.actual}"
+                onchange="updateFinanceRow('income','${row.id}','actual',this.value)"
+                class="w-20 text-right bg-transparent hover:bg-linen focus:bg-linen rounded px-1 py-0.5 font-semibold text-sage-700 focus:outline-none" />
+            </td>
+            <td class="py-1.5 px-2 text-right font-semibold ${pct >= 100 ? 'text-sage-700' : 'text-ink-600'}">${fmtPct(pct, 0)}</td>
+            <td class="py-1.5 px-1 text-center">
+              <button onclick="deleteFinanceRow('income','${row.id}')" class="opacity-0 group-hover:opacity-100 text-ink-400 hover:text-red-700">&times;</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+      document.getElementById('fin-income-tfoot').innerHTML = `
+        <tr>
+          <td class="py-2 px-3">${t('totalLabel')}</td>
+          <td class="py-2 px-2 text-right">${fmtMoney(incPlan)}</td>
+          <td class="py-2 px-2 text-right text-sage-700">${fmtMoney(incActual)}</td>
+          <td class="py-2 px-2 text-right">${incPlan > 0 ? fmtPct((incActual / incPlan) * 100, 0) : '—'}</td>
+          <td></td>
+        </tr>
+      `;
+
+      // Expense Summary Table (Highlighting over-budget >= 100% in soft terracotta/red like Screenshot 5!)
+      document.getElementById('fin-expense-tbody').innerHTML = state.expenses.map(row => {
+        const pct = row.plan > 0 ? (row.actual / row.plan) * 100 : 0;
+        const isOver = row.plan > 0 && pct >= 100;
+        return `
+          <tr class="hover:bg-linen/50 group">
+            <td class="py-1.5 px-3">
+              <input type="text" value="${escapeHtml(getLocalizedName(row))}"
+                onchange="updateFinanceRow('expense','${row.id}','name',this.value)"
+                class="w-full bg-transparent text-ink-800 font-medium focus:outline-none focus:bg-linen rounded px-1 py-0.5" />
+            </td>
+            <td class="py-1.5 px-2 text-right">
+              <input type="number" min="0" step="100" value="${row.plan}"
+                onchange="updateFinanceRow('expense','${row.id}','plan',this.value)"
+                class="w-20 text-right bg-transparent hover:bg-linen focus:bg-linen rounded px-1 py-0.5 focus:outline-none" />
+            </td>
+            <td class="py-1.5 px-2 text-right">
+              <input type="number" min="0" step="100" value="${row.actual}"
+                onchange="updateFinanceRow('expense','${row.id}','actual',this.value)"
+                class="w-20 text-right bg-transparent hover:bg-linen focus:bg-linen rounded px-1 py-0.5 font-semibold text-ink-800 focus:outline-none" />
+            </td>
+            <td class="py-1.5 px-3 text-right font-semibold ${isOver ? 'text-red-700 bg-red-50/70' : 'text-ink-600'}">
+              ${row.plan > 0 ? fmtPct(pct, 2) : (row.actual > 0 ? '—' : '0,00%')}
+            </td>
+            <td class="py-1.5 px-1 text-center">
+              <button onclick="deleteFinanceRow('expense','${row.id}')" class="opacity-0 group-hover:opacity-100 text-ink-400 hover:text-red-700">&times;</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+      document.getElementById('fin-expense-tfoot').innerHTML = `
+        <tr>
+          <td class="py-2 px-3">${t('totalLabel')}</td>
+          <td class="py-2 px-2 text-right">${fmtMoney(expPlan)}</td>
+          <td class="py-2 px-2 text-right text-clay-700">${fmtMoney(expActual)}</td>
+          <td class="py-2 px-3 text-right">${expPlan > 0 ? fmtPct((expActual / expPlan) * 100, 1) : '—'}</td>
+          <td></td>
+        </tr>
+      `;
+
+      // Savings & Goals Tracker (Screenshot 6 Right)
+      document.getElementById('fin-goals-tbody').innerHTML = state.goals.map(g => {
+        const pct = g.target > 0 ? Math.min(100, (g.saved / g.target) * 100) : 0;
+        return `
+          <tr class="hover:bg-linen/50 group">
+            <td class="py-1.5 px-3">
+              <input type="text" value="${escapeHtml(getLocalizedName(g))}"
+                onchange="updateGoalRow('${g.id}','name',this.value)"
+                class="w-full bg-transparent text-ink-800 font-medium focus:outline-none focus:bg-linen rounded px-1 py-0.5" />
+            </td>
+            <td class="py-1.5 px-2 text-right">
+              <input type="number" min="0" step="1000" value="${g.saved}"
+                onchange="updateGoalRow('${g.id}','saved',this.value)"
+                class="w-20 text-right bg-transparent hover:bg-linen focus:bg-linen rounded px-1 py-0.5 font-semibold text-sage-700 focus:outline-none" />
+            </td>
+            <td class="py-1.5 px-2 text-right">
+              <input type="number" min="0" step="1000" value="${g.target}"
+                onchange="updateGoalRow('${g.id}','target',this.value)"
+                class="w-20 text-right bg-transparent hover:bg-linen focus:bg-linen rounded px-1 py-0.5 focus:outline-none" />
+            </td>
+            <td class="py-1.5 px-3">
+              <div class="flex items-center gap-1.5">
+                <div class="flex-1 h-2 bg-linen rounded-full overflow-hidden">
+                  <div class="h-full bg-sage-500 rounded-full bar-fill" style="width:${pct}%"></div>
+                </div>
+                <span class="text-[10px] font-semibold text-ink-600 w-8 text-right">${Math.round(pct)}%</span>
+              </div>
+            </td>
+            <td class="py-1.5 px-1 text-center">
+              <button onclick="deleteGoalRow('${g.id}')" class="opacity-0 group-hover:opacity-100 text-ink-400 hover:text-red-700">&times;</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      // Top-20 Expense Categories (Screenshot 6 Bottom)
+      document.getElementById('fin-top20-tbody').innerHTML = sortedExp.slice(0, 20).map((row, idx) => {
+        const share = expActual > 0 ? (row.actual / expActual) * 100 : 0;
+        return `
+          <tr class="hover:bg-linen/50">
+            <td class="py-2 px-4 font-bold text-ink-400">${idx + 1}</td>
+            <td class="py-2 px-4 font-medium text-ink-800">${escapeHtml(getLocalizedName(row))}</td>
+            <td class="py-2 px-4 hidden sm:table-cell">
+              <div class="w-full h-2.5 bg-linen rounded-full overflow-hidden">
+                <div class="h-full bg-clay-400 rounded-full bar-fill" style="width:${share.toFixed(1)}%"></div>
+              </div>
+            </td>
+            <td class="py-2 px-4 text-right font-semibold text-ink-800">${fmtMoney(row.actual)}</td>
+            <td class="py-2 px-4 text-right font-semibold text-clay-700">${fmtPct(share, 2)}</td>
+          </tr>
+        `;
+      }).join('') || `<tr><td colspan="5" class="py-6 text-center text-ink-400">—</td></tr>`;
+    }
+
+    /* -----------------------------------------------------------------------
+     * 8. BACKUP / IMPORT / RESET MODAL HANDLERS
+     * --------------------------------------------------------------------- */
+    function openDataModal() {
+      document.getElementById('data-modal').classList.remove('hidden');
+    }
+    function closeDataModal() {
+      document.getElementById('data-modal').classList.add('hidden');
+    }
+
+    function exportData() {
+      const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `life-analytics-backup-${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      closeDataModal();
+      showToast(t('toastExported'));
+    }
+
+    function importData(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = ev => {
+        try {
+          const parsed = JSON.parse(ev.target.result);
+          if (parsed && Array.isArray(parsed.habits) && Array.isArray(parsed.tasks)) {
+            state = parsed;
+            saveState();
+            applyTranslations();
+            renderAll();
+            closeDataModal();
+            showToast(t('toastImported'));
+          } else {
+            showToast(t('toastError'));
+          }
+        } catch (err) {
+          showToast(t('toastError'));
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function resetDemoData() {
+      const currentLang = state.lang;
+      const currentCurr = state.currency;
+      state = buildDemoState();
+      state.lang = currentLang;
+      state.currency = currentCurr;
+      saveState();
+      applyTranslations();
+      renderAll();
+      closeDataModal();
+      showToast(t('toastReset'));
+    }
+
+    function renderAll() {
+      switchModule(state.activeModule || 'habits');
+    }
+
+    /* -----------------------------------------------------------------------
+     * 9. INITIALIZATION
+     * --------------------------------------------------------------------- */
+    window.addEventListener('DOMContentLoaded', () => {
+      applyTranslations();
+      renderAll();
+    });
+  </script>
+</body>
+</html>
